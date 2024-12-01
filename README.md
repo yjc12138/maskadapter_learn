@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 # MaskAdapter
 =======
 <div align ="center">
@@ -62,3 +63,6 @@ If you use Mask-Adapter in your research, please use the following BibTeX entry.
 
 [ODISE](https://github.com/NVlabs/ODISE)
 >>>>>>> master
+=======
+# MaskAdapter
+>>>>>>> dd48391686cd7522a9a9dce5403bee133d823327
