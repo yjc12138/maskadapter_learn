@@ -1,5 +1,4 @@
 # MaskAdapter
-=======
 <div align ="center">
 <img src="./assets/logo.jpeg" width="20%">
 <h1> Mask-Adapter </h1>
@@ -66,5 +65,4 @@ If you use Mask-Adapter in your research, please use the following BibTeX entry.
 [MAFTP](https://github.com/jiaosiyu1999/MAFT-Plus)
 
 [SAM](https://github.com/facebookresearch/segment-anything)
-=======
 # MaskAdapter
