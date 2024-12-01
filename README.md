@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
 # MaskAdapter
 =======
 <div align ="center">
@@ -62,7 +60,11 @@ If you use Mask-Adapter in your research, please use the following BibTeX entry.
 [Mask2Former](https://github.com/facebookresearch/Mask2Former)
 
 [ODISE](https://github.com/NVlabs/ODISE)
->>>>>>> master
+
+[FC-CLIP](https://github.com/bytedance/fc-clip)
+
+[MAFTP](https://github.com/jiaosiyu1999/MAFT-Plus)
+
+[SAM](https://github.com/facebookresearch/segment-anything)
 =======
 # MaskAdapter
->>>>>>> dd48391686cd7522a9a9dce5403bee133d823327
