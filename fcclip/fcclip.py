@@ -105,6 +105,7 @@ class FCCLIP(nn.Module):
         self.backbone = backbone
         self.sem_seg_head = sem_seg_head
         self.mask_adapter = mask_adapter
+        self.weight_dict = weight_dict
         self.num_queries = num_queries
         self.overlap_threshold = overlap_threshold
         self.object_mask_threshold = object_mask_threshold
@@ -408,18 +409,9 @@ class FCCLIP(nn.Module):
             in_vocab_cls_results = in_vocab_cls_results.softmax(-1)
             category_overlapping_mask = self.category_overlapping_mask.to(self.device)
 
-            if self.ensemble_on_valid_mask:
-                # Only include out_vocab cls results on masks with valid pixels
-                # We empirically find that this is important to obtain reasonable AP/mIOU score with ResNet CLIP models
-                valid_masking = (mask_for_pooling > 0).to(mask_for_pooling).sum(-1).sum(-1) > 0
-                valid_masking = valid_masking.to(in_vocab_cls_results.dtype).unsqueeze(-1)
-                alpha = torch.ones_like(in_vocab_cls_results) * self.geometric_ensemble_alpha
-                beta = torch.ones_like(in_vocab_cls_results) * self.geometric_ensemble_beta
-                alpha = alpha * valid_masking
-                beta = beta * valid_masking
-            else:
-                alpha = self.geometric_ensemble_alpha
-                beta = self.geometric_ensemble_beta
+
+            alpha = self.geometric_ensemble_alpha
+            beta = self.geometric_ensemble_beta
 
             cls_logits_seen = (
                 (in_vocab_cls_results ** (1 - alpha) * out_vocab_cls_probs**alpha).log()

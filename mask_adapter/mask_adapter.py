@@ -98,7 +98,7 @@ class MASK_Adapter(nn.Module):
         """
         super().__init__()
         self.backbone = backbone
-        self.sem_seg_head = mask_adapter
+        self.mask_adapter = mask_adapter
         self.weight_dict = weight_dict
         self.num_queries = num_queries
         self.overlap_threshold = overlap_threshold
@@ -341,8 +341,12 @@ class MASK_Adapter(nn.Module):
         
         if self.train_maft:
             #https://github.com/jiaosiyu1999/MAFT-Plus/blob/fd12806df651d309883229de9503e40533f92689/maft/maft_plus.py#L352
+            #For maftp,it uses a wrong reshape operation to get clip_vis_dense. Since we don't finetune cdt, we follow them. 
             img_feat = self.visual_prediction_forward_convnext(clip_feature)
             text_classifier = self.cdt(img_feat, text_classifier)
+            clip_vis_dense = img_feat
+        else:
+            clip_vis_dense = self.visual_prediction_forward_convnext_2d(clip_feature)
             
         if self.training:
             # mask classification target
@@ -352,7 +356,7 @@ class MASK_Adapter(nn.Module):
             else:
                 targets = None            
 
-            semantic_activation_maps = self.sem_seg_head(clip_vis_dense, masks)
+            semantic_activation_maps = self.mask_adapter(clip_vis_dense, masks)
                 
             maps_for_pooling = F.interpolate(semantic_activation_maps, size=clip_feature.shape[-2:],
                                                 mode='bilinear', align_corners=False)
@@ -391,7 +395,7 @@ class MASK_Adapter(nn.Module):
             masks = torch.stack(masks)            
             classes =  torch.stack(classes)
                         
-            outputs = self.sem_seg_head(clip_vis_dense, masks)
+            outputs = self.mask_adapter(clip_vis_dense, masks)
             
             maps_for_pooling = F.interpolate(outputs, size=clip_vis_dense.shape[-2:],
                                                 mode='bilinear', align_corners=False)
@@ -579,7 +583,8 @@ class MASK_Adapter(nn.Module):
         return semseg
 
     def panoptic_inference(self, mask_cls, mask_pred):
- 
+
+                
         scores, labels = F.softmax(mask_cls, dim=-1).max(-1)
         num_classes = len(self.test_metadata[self.test_dataname].stuff_classes)
         keep = labels.ne(num_classes) & (scores > self.object_mask_threshold)

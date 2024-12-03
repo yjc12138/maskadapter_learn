@@ -37,4 +37,4 @@ DATASETS:
   TEST: ("openvocab_ade20k_panoptic_val",) 
 DATALOADER:
   SAMPLER_TRAIN: "TrainingSampler"
-OUTPUT_DIR: ./maft-b-adapter
+OUTPUT_DIR: ./training/first-phase/maft_b_adapter

@@ -5,6 +5,7 @@ All Bytedance's Modifications are Copyright (year) Bytedance Ltd. and/or its aff
 Reference: https://github.com/facebookresearch/Mask2Former/blob/main/mask2former/maskformer_model.py
 """
 from typing import Tuple
+import random
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -91,6 +92,7 @@ class MAFT_Plus(nn.Module):
         self.backbone_t = backbone_t
         self.sem_seg_head = sem_seg_head
         self.mask_adapter = mask_adapter
+        self.weight_dict = weight_dict
         self.num_queries = num_queries
         self.overlap_threshold = overlap_threshold
         self.object_mask_threshold = object_mask_threshold
@@ -140,11 +142,11 @@ class MAFT_Plus(nn.Module):
         
     def _freeze(self, ):
         for name, param in self.named_parameters():
-            if "adapter" in name and "sem_seg_head" not in name:
+            if "mask_adapter" in name and "sem_seg_head" not in name:
                 param.requires_grad = True
-            if "adapter" not in name or "sem_seg_head" in name:
+            if "mask_adapter" not in name or "sem_seg_head" in name:
                 param.requires_grad = False
-            if param.requires_grad == True and 'adapter' not in name:
+            if param.requires_grad == True:
                 print(name, param.requires_grad)
                 
     def prepare_class_names_from_metadata(self, metadata, train_metadata):
@@ -335,11 +337,10 @@ class MAFT_Plus(nn.Module):
 
         clip_feature = features['clip_vis_dense']
         
-
         img_feat = self.visual_prediction_forward_convnext(clip_feature)
         text_classifier = self.cdt(img_feat, text_classifier)
         clip_vis_dense = img_feat
-
+        
         if self.training:
             # mask classification target
             if "instances" in batched_inputs[0]:
@@ -377,7 +378,7 @@ class MAFT_Plus(nn.Module):
             else:
                 raise NotImplementedError
             
-            loss_cosine_similarity = self.cosine_similarity_loss(pooled_clip_feature[:, 16:24, :], pooled_clip_feature[:, 24:, :].detach())
+            loss_cosine_similarity = self.cosine_similarity_loss(pooled_clip_feature[:, 16:24, :], pooled_clip_feature[:, 24:, :])
 
             mask_cls_results = get_classification_logits(pooled_clip_feature, text_classifier, self.backbone.clip_model.logit_scale, num_templates)
                          
@@ -509,7 +510,6 @@ class MAFT_Plus(nn.Module):
         labels_list = []
 
         num_masks = self.num_gt_masks  
-        min_mask_area = 0  
 
         for targets_per_image in targets:
             gt_masks = targets_per_image.gt_masks
@@ -520,7 +520,7 @@ class MAFT_Plus(nn.Module):
             if len(valid_mask_indices) > 0:
                 valid_gt_masks = gt_masks[valid_mask_indices]
                 valid_gt_classes = targets_per_image.gt_classes[valid_mask_indices]
-
+                
                 padded_masks = torch.zeros((valid_gt_masks.shape[0], h_pad, w_pad), dtype=valid_gt_masks.dtype, device=valid_gt_masks.device)
                 padded_masks[:, : valid_gt_masks.shape[1], : valid_gt_masks.shape[2]] = valid_gt_masks
                 new_targets.append(
@@ -531,24 +531,20 @@ class MAFT_Plus(nn.Module):
                 )
 
                 total_masks = torch.zeros((num_masks, h_pad, w_pad), dtype=gt_masks.dtype, device=gt_masks.device)
-                selected_labels = torch.full((num_masks,), -1, dtype=valid_gt_classes.dtype, device=gt_masks.device)
+                selected_labels = torch.zeros((num_masks), device=gt_masks.device)
 
-                if valid_gt_masks.shape[0] > num_masks:
-                    selected_indices = torch.randperm(valid_gt_masks.shape[0])[:num_masks]
+                if valid_gt_masks.shape[0] != 0:
+                    selected_indices = random.choices(range(valid_gt_masks.shape[0]), k=num_masks)
+
                     for idx, mask_idx in enumerate(selected_indices):
                         total_masks[idx, :valid_gt_masks[mask_idx].shape[0], :valid_gt_masks[mask_idx].shape[1]] = valid_gt_masks[mask_idx]
                         selected_labels[idx] = valid_gt_classes[mask_idx]
                 else:
-                    for idx in range(valid_gt_masks.shape[0]):
-                        total_masks[idx, :valid_gt_masks[idx].shape[0], :valid_gt_masks[idx].shape[1]] = valid_gt_masks[idx]
-                        selected_labels[idx] = valid_gt_classes[idx]
-                    
-                    for idx in range(valid_gt_masks.shape[0], num_masks):
-                        total_masks[idx] = torch.zeros((h_pad, w_pad), dtype=gt_masks.dtype, device=gt_masks.device)
-                        selected_labels[idx] = -1
+                    selected_labels.fill_(-1)
             else:
                 total_masks = torch.zeros((num_masks, h_pad, w_pad), dtype=gt_masks.dtype, device=gt_masks.device)
-                selected_labels = torch.full((num_masks,), -1, dtype=torch.long, device=gt_masks.device)
+                selected_labels = torch.zeros((num_masks), device=gt_masks.device)
+                selected_labels.fill_(-1)
                 
                 padded_masks = torch.zeros((0, h_pad, w_pad), dtype=gt_masks.dtype, device=gt_masks.device)
                 valid_gt_classes = torch.zeros((0), device=gt_masks.device)
@@ -636,6 +632,13 @@ class MAFT_Plus(nn.Module):
         
         return matched_src_masks, matched_target_masks, matched_labels
     
+    def visual_prediction_forward_convnext(self, x):
+        batch, channel, h, w = x.shape
+        x = x.reshape(batch*h*w, channel).unsqueeze(-1).unsqueeze(-1) # fake 2D input
+        x = self.backbone.clip_model.visual.trunk.head(x)
+        x = self.backbone.clip_model.visual.head(x)
+        return x.reshape(batch, h, w, x.shape[-1]).permute(0,3,1,2) 
+
     def visual_prediction_forward_convnext_2d(self, x):
         
         clip_vis_dense = self.backbone.clip_model.visual.trunk.head.norm(x)
@@ -772,12 +775,6 @@ class MAFT_Plus(nn.Module):
 
 
 
-    def visual_prediction_forward_convnext(self, x):
-        batch, channel, h, w = x.shape
-        x = x.reshape(batch*h*w, channel).unsqueeze(-1).unsqueeze(-1) # fake 2D input
-        x = self.backbone.clip_model.visual.trunk.head(x)
-        x = self.backbone.clip_model.visual.head(x)
-        return x.reshape(batch, h, w, x.shape[-1]).permute(0,3,1,2) 
 
 def compute_mask_iou(pred_masks, tgt_masks):
 

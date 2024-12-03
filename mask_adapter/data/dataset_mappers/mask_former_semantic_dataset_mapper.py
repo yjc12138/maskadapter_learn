@@ -67,25 +67,46 @@ class MaskFormerSemanticDatasetMapper:
     @classmethod
     def from_config(cls, cfg, is_train=True):
         # Build augmentation
-        augs = [
-            T.ResizeShortestEdge(
-                cfg.INPUT.MIN_SIZE_TRAIN,
-                cfg.INPUT.MAX_SIZE_TRAIN,
-                cfg.INPUT.MIN_SIZE_TRAIN_SAMPLING,
-            )
-        ]
-        if cfg.INPUT.CROP.ENABLED:
-            augs.append(
-                T.RandomCrop_CategoryAreaConstraint(
-                    cfg.INPUT.CROP.TYPE,
-                    cfg.INPUT.CROP.SIZE,
-                    cfg.INPUT.CROP.SINGLE_CATEGORY_MAX_AREA,
-                    cfg.MODEL.SEM_SEG_HEAD.IGNORE_VALUE,
+        # augs = [
+        #     T.ResizeShortestEdge(
+        #         cfg.INPUT.MIN_SIZE_TRAIN,
+        #         cfg.INPUT.MAX_SIZE_TRAIN,
+        #         cfg.INPUT.MIN_SIZE_TRAIN_SAMPLING,
+        #     )
+        # ]
+        # if cfg.INPUT.CROP.ENABLED:
+        #     augs.append(
+        #         T.RandomCrop_CategoryAreaConstraint(
+        #             cfg.INPUT.CROP.TYPE,
+        #             cfg.INPUT.CROP.SIZE,
+        #             cfg.INPUT.CROP.SINGLE_CATEGORY_MAX_AREA,
+        #             cfg.MODEL.SEM_SEG_HEAD.IGNORE_VALUE,
+        #         )
+        #     )
+        # if cfg.INPUT.COLOR_AUG_SSD:
+        #     augs.append(ColorAugSSDTransform(img_format=cfg.INPUT.FORMAT))
+        # augs.append(T.RandomFlip())
+
+        image_size = cfg.INPUT.IMAGE_SIZE
+        min_scale = cfg.INPUT.MIN_SCALE
+        max_scale = cfg.INPUT.MAX_SCALE
+
+        augmentation = []
+
+        if cfg.INPUT.RANDOM_FLIP != "none":
+            augmentation.append(
+                T.RandomFlip(
+                    horizontal=cfg.INPUT.RANDOM_FLIP == "horizontal",
+                    vertical=cfg.INPUT.RANDOM_FLIP == "vertical",
                 )
             )
-        if cfg.INPUT.COLOR_AUG_SSD:
-            augs.append(ColorAugSSDTransform(img_format=cfg.INPUT.FORMAT))
-        augs.append(T.RandomFlip())
+
+        augmentation.extend([
+            T.ResizeScale(
+                min_scale=min_scale, max_scale=max_scale, target_height=image_size, target_width=image_size
+            ),
+            T.FixedSizeCrop(crop_size=(image_size, image_size)),
+        ])
 
         # Assume always applies to the training set.
         dataset_names = cfg.DATASETS.TRAIN
@@ -94,7 +115,7 @@ class MaskFormerSemanticDatasetMapper:
 
         ret = {
             "is_train": is_train,
-            "augmentations": augs,
+            "augmentations": augmentation,
             "image_format": cfg.INPUT.FORMAT,
             "ignore_label": ignore_label,
             "size_divisibility": cfg.INPUT.SIZE_DIVISIBILITY,
