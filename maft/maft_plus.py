@@ -520,9 +520,9 @@ class MAFT_Plus(nn.Module):
             if len(valid_mask_indices) > 0:
                 valid_gt_masks = gt_masks[valid_mask_indices]
                 valid_gt_classes = targets_per_image.gt_classes[valid_mask_indices]
-                
+
                 padded_masks = torch.zeros((valid_gt_masks.shape[0], h_pad, w_pad), dtype=valid_gt_masks.dtype, device=valid_gt_masks.device)
-                padded_masks[:, : valid_gt_masks.shape[1], : valid_gt_masks.shape[2]] = valid_gt_masks
+                padded_masks[:, :valid_gt_masks.shape[1], :valid_gt_masks.shape[2]] = valid_gt_masks
                 new_targets.append(
                     {
                         "labels": valid_gt_classes,
@@ -531,20 +531,24 @@ class MAFT_Plus(nn.Module):
                 )
 
                 total_masks = torch.zeros((num_masks, h_pad, w_pad), dtype=gt_masks.dtype, device=gt_masks.device)
-                selected_labels = torch.zeros((num_masks), device=gt_masks.device)
+                selected_labels = torch.full((num_masks,), -1, dtype=valid_gt_classes.dtype, device=gt_masks.device)
 
-                if valid_gt_masks.shape[0] != 0:
-                    selected_indices = random.choices(range(valid_gt_masks.shape[0]), k=num_masks)
-
+                if valid_gt_masks.shape[0] > num_masks:
+                    selected_indices = torch.randperm(valid_gt_masks.shape[0])[:num_masks]
                     for idx, mask_idx in enumerate(selected_indices):
                         total_masks[idx, :valid_gt_masks[mask_idx].shape[0], :valid_gt_masks[mask_idx].shape[1]] = valid_gt_masks[mask_idx]
                         selected_labels[idx] = valid_gt_classes[mask_idx]
                 else:
-                    selected_labels.fill_(-1)
+                    for idx in range(valid_gt_masks.shape[0]):
+                        total_masks[idx, :valid_gt_masks[idx].shape[0], :valid_gt_masks[idx].shape[1]] = valid_gt_masks[idx]
+                        selected_labels[idx] = valid_gt_classes[idx]
+                    
+                    for idx in range(valid_gt_masks.shape[0], num_masks):
+                        total_masks[idx] = torch.zeros((h_pad, w_pad), dtype=gt_masks.dtype, device=gt_masks.device)
+                        selected_labels[idx] = -1
             else:
                 total_masks = torch.zeros((num_masks, h_pad, w_pad), dtype=gt_masks.dtype, device=gt_masks.device)
-                selected_labels = torch.zeros((num_masks), device=gt_masks.device)
-                selected_labels.fill_(-1)
+                selected_labels = torch.full((num_masks,), -1, dtype=torch.long, device=gt_masks.device)
                 
                 padded_masks = torch.zeros((0, h_pad, w_pad), dtype=gt_masks.dtype, device=gt_masks.device)
                 valid_gt_classes = torch.zeros((0), device=gt_masks.device)

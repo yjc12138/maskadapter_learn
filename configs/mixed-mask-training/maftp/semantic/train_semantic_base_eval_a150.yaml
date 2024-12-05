@@ -12,7 +12,7 @@ MODEL:
     NUM_CHANNELS: 768
     USE_CHECKPOINT: False
     NUM_OUTPUT_MAPS: 16
-    MASK_THRESHOLD: 0.5
+    MASK_THRESHOLD: 0.45
   FC_CLIP:
     CLIP_MODEL_NAME: "convnext_base_w_320"  
     CLIP_PRETRAINED_WEIGHTS: "laion_aesthetic_s13b_b82k_augreg"   
@@ -46,5 +46,5 @@ TEST:
   EVAL_PERIOD: 2500
 INPUT:
   DATASET_MAPPER_NAME: "mask_former_semantic"  #
-OUTPUT_DIR: ../evaluation/maftp-base/ade20k
+OUTPUT_DIR: ./training/maftp-base/ade20k
      
