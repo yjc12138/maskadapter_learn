@@ -1,8 +1,7 @@
-# MaskAdapter
 <div align ="center">
-<img src="./assets/logo.jpeg" width="20%">
+<img src="./assets/logo.jpg" width="20%">
 <h1> Mask-Adapter </h1>
-<h3> Mask-Adapter: The Devil is in the Masks for Open-Vocabulary Segmentation </h3>
+<h3> The Devil is in the Masks for Open-Vocabulary Segmentation </h3>
 
 YongKang Li<sup>1,\*</sup>, [Tianheng Cheng](https://scholar.google.com/citations?user=PH8rJHYAAAAJ&hl=zh-CN)<sup>1,\*</sup>, [Wenyu Liu](http://eic.hust.edu.cn/professor/liuwenyu)<sup>1</sup>, [Xinggang Wang](https://xwcv.github.io/)<sup>1,📧</sup>
 
@@ -12,8 +11,8 @@ YongKang Li<sup>1,\*</sup>, [Tianheng Cheng](https://scholar.google.com/citation
 (\* equal contribution, 📧 corresponding author)
 
 [![arxiv paper](https://img.shields.io/badge/arXiv-Paper-red)]()
-[![checkpoints](https://img.shields.io/badge/HuggingFace-🤗-orange)]()
-[![🤗 HuggingFace Demo](https://img.shields.io/badge/Mask_Adapter-🤗_HF_Demo-orange)]()
+[![checkpoints](https://img.shields.io/badge/HuggingFace-🤗_Weight-orange)](https://huggingface.co/owl10/Mask-Adapter)
+[![🤗 HuggingFace Demo](https://img.shields.io/badge/Mask_Adapter-🤗_HF_Demo-orange)](https://huggingface.co/spaces/wondervictor/Mask-Adapter)
 
 </div>
 
@@ -31,38 +30,38 @@ YongKang Li<sup>1,\*</sup>, [Tianheng Cheng](https://scholar.google.com/citation
 ## Updates
 - [x] Release code
 - [x] Release weights
-- [x] Release demo with SAM-2👉 [🤗 Mask-Adapter]()
+- [x] Release demo with SAM-2👉 [🤗 Mask-Adapter](https://huggingface.co/spaces/wondervictor/Mask-Adapter)
 - [ ] Release weights training with addtional data
 
 
-## Installation
-Please follow [installation](INSTALL.md).
-
 ## Getting Started
++ [installation](INSTALL.md).
 
-See [Preparing Datasets for Mask-Adapter](datasets/README.md).Following [FC-CLIP](https://github.com/bytedance/fc-clip) and [MAFT-Plus](https://github.com/jiaosiyu1999/MAFT-Plus) to prepare datasets.
++ [Preparing Datasets for Mask-Adapter](datasets/README.md).
 
-See [Getting Started with   Mask-Adapter](GETTING_STARTED.md).
++ [Getting Started with Mask-Adapter](GETTING_STARTED.md).
 
+## Models
 
+| Model | Backbone | A-847 | A-150 | PC-459 | PC-59 | PAS-20 | Download |
+|:---: |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+|FC-CLIP + Mask-Adapter|ConvNeXt-L|14.1|36.6|19.3|59.7|95.5|[model](https://drive.google.com/file/d/13_sr30_Q0Geubijik0BpVC_JgyFAmyQU/view?usp=drive_link) |
+|MAFTP-Base + Mask-Adapter|ConvNeXt-B|14.2|35.6|17.9|58.4|95.1 |[model](https://drive.google.com/file/d/1v0rdETOJl6oOKmef1L7WbtG16-zKvp2b/view?usp=drive_link)|
+|MAFTP-Large + Mask-Adapter|ConvNeXt-L|16.1|38.2|22.7|60.4|95.8 |[model](https://drive.google.com/file/d/12eqDnTYaQlj9QUmWO1Vh9vvB81tKABl5/view?usp=drive_link) |
 
-## <a name="Citing Mask-Adapter"></a>Citing  Mask-Adapter
-
-If you use Mask-Adapter in your research, please use the following BibTeX entry.
+## Citation
+If you Mask-Adapter useful in your research or applications, please consider giving us a star &#127775; and citing it by the following BibTeX entry.
 
 ```BibTeX
 
 ```
+## License
+All code in this repository is under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+
 
 ## Acknowledgement
 
-[Mask2Former](https://github.com/facebookresearch/Mask2Former)
+Mask-Adapter is based on the following projects: [detectron2](https://github.com/facebookresearch/detectron2), [Mask2Former](https://github.com/facebookresearch/Mask2Former), [FC-CLIP](https://github.com/bytedance/fc-clip) and [MAFTP](https://github.com/jiaosiyu1999/MAFT-Plus). Many thanks for their excellent contributions to the community.
 
-[ODISE](https://github.com/NVlabs/ODISE)
 
-[FC-CLIP](https://github.com/bytedance/fc-clip)
 
-[MAFTP](https://github.com/jiaosiyu1999/MAFT-Plus)
-
-[SAM](https://github.com/facebookresearch/segment-anything)
-# MaskAdapter
