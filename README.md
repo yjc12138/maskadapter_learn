@@ -35,7 +35,7 @@ YongKang Li<sup>1,\*</sup>, [Tianheng Cheng](https://scholar.google.com/citation
 
 
 ## Getting Started
-+ [installation](INSTALL.md).
++ [Installation](INSTALL.md).
 
 + [Preparing Datasets for Mask-Adapter](datasets/README.md).
 
@@ -45,9 +45,12 @@ YongKang Li<sup>1,\*</sup>, [Tianheng Cheng](https://scholar.google.com/citation
 
 | Model | Backbone | A-847 | A-150 | PC-459 | PC-59 | PAS-20 | Download |
 |:---: |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-|FC-CLIP + Mask-Adapter|ConvNeXt-L|14.1|36.6|19.3|59.7|95.5|[model](https://drive.google.com/file/d/13_sr30_Q0Geubijik0BpVC_JgyFAmyQU/view?usp=drive_link) |
-|MAFTP-Base + Mask-Adapter|ConvNeXt-B|14.2|35.6|17.9|58.4|95.1 |[model](https://drive.google.com/file/d/1v0rdETOJl6oOKmef1L7WbtG16-zKvp2b/view?usp=drive_link)|
-|MAFTP-Large + Mask-Adapter|ConvNeXt-L|16.1|38.2|22.7|60.4|95.8 |[model](https://drive.google.com/file/d/12eqDnTYaQlj9QUmWO1Vh9vvB81tKABl5/view?usp=drive_link) |
+|FC-CLIP|ConvNeXt-L|14.8|34.1|18.2|58.4|95.4|[model](https://drive.google.com/file/d/1-91PIns86vyNaL3CzMmDD39zKGnPMtvj/view?usp=sharing) |
+|FC-CLIP + Mask-Adapter|ConvNeXt-L|14.1|36.6|19.3|59.7|95.5|[model](https://drive.google.com/file/d/13_sr30_Q0Geubijik0BpVC_JgyFAmyQU/view?usp=sharing) |
+|MAFTP-Base|ConvNeXt-B|13.8|34.5|18.5|57.5|95.5|[model](https://drive.google.com/file/d/1BeEeKOnWWIWIH-QWK_zLhAPUzCOnHuFG/view?usp=sharing)|
+|MAFTP-Base + Mask-Adapter|ConvNeXt-B|14.2|35.6|17.9|58.4|95.1 |[model](https://drive.google.com/file/d/1v0rdETOJl6oOKmef1L7WbtG16-zKvp2b/view?usp=sharing)|
+|MAFTP-Large|ConvNeXt-L|15.5|36.3|21.2|59.5|96.4|[model](https://drive.google.com/file/d/1EQo5guVuKkSSZj4bv0FQN_4X9h_Rwfe5/view?usp=sharing) |
+|MAFTP-Large + Mask-Adapter|ConvNeXt-L|16.1|38.2|22.7|60.4|95.8 |[model](https://drive.google.com/file/d/12eqDnTYaQlj9QUmWO1Vh9vvB81tKABl5/view?usp=sharing) |
 
 ## Citation
 If you Mask-Adapter useful in your research or applications, please consider giving us a star &#127775; and citing it by the following BibTeX entry.
