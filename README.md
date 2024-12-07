@@ -44,7 +44,7 @@ YongKang Li<sup>1,\*</sup>, [Tianheng Cheng](https://scholar.google.com/citation
 ## Models
 
 | Model | Backbone | A-847 | A-150 | PC-459 | PC-59 | PAS-20 | Download |
-|:---: |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+|:----- |:---------|:---:|:---:|:---:|:---:|:---:|:---:|
 |FC-CLIP|ConvNeXt-L|14.8|34.1|18.2|58.4|95.4|[model](https://drive.google.com/file/d/1-91PIns86vyNaL3CzMmDD39zKGnPMtvj/view?usp=sharing) |
 |FC-CLIP + Mask-Adapter|ConvNeXt-L|14.1|36.6|19.3|59.7|95.5|[model](https://drive.google.com/file/d/13_sr30_Q0Geubijik0BpVC_JgyFAmyQU/view?usp=sharing) |
 |MAFTP-Base|ConvNeXt-B|13.8|34.5|18.5|57.5|95.5|[model](https://drive.google.com/file/d/1BeEeKOnWWIWIH-QWK_zLhAPUzCOnHuFG/view?usp=sharing)|
