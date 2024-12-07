@@ -35,7 +35,7 @@ YongKang Li<sup>1,\*</sup>, [Tianheng Cheng](https://scholar.google.com/citation
 
 
 ## Getting Started
-+ [installation](INSTALL.md).
++ [Installation](INSTALL.md).
 
 + [Preparing Datasets for Mask-Adapter](datasets/README.md).
 
