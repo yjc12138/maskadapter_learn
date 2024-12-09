@@ -12,7 +12,7 @@ MODEL:
     NUM_CHANNELS: 768
     USE_CHECKPOINT: False
     NUM_OUTPUT_MAPS: 16
-    MASK_THRESHOLD: 0.45
+    MASK_THRESHOLD: 0.40
   FC_CLIP:
     CLIP_MODEL_NAME: "convnext_large_d_320"  
     CLIP_PRETRAINED_WEIGHTS: "laion2b_s29b_b131k_ft_soup" 
