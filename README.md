@@ -14,6 +14,10 @@ Yongkang Li<sup>1,\*</sup>, [Tianheng Cheng](https://scholar.google.com/citation
 [![checkpoints](https://img.shields.io/badge/HuggingFace-🤗_Weight-orange)](https://huggingface.co/owl10/Mask-Adapter)
 [![🤗 HuggingFace Demo](https://img.shields.io/badge/Mask_Adapter-🤗_HF_Demo-orange)](https://huggingface.co/spaces/wondervictor/Mask-Adapter)
 
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/mask-adapter-the-devil-is-in-the-masks-for/open-vocabulary-semantic-segmentation-on-2)](https://paperswithcode.com/sota/open-vocabulary-semantic-segmentation-on-2?p=mask-adapter-the-devil-is-in-the-masks-for)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/mask-adapter-the-devil-is-in-the-masks-for/open-vocabulary-semantic-segmentation-on-3)](https://paperswithcode.com/sota/open-vocabulary-semantic-segmentation-on-3?p=mask-adapter-the-devil-is-in-the-masks-for)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/mask-adapter-the-devil-is-in-the-masks-for/open-vocabulary-semantic-segmentation-on-7)](https://paperswithcode.com/sota/open-vocabulary-semantic-segmentation-on-7?p=mask-adapter-the-devil-is-in-the-masks-for)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/mask-adapter-the-devil-is-in-the-masks-for/open-vocabulary-semantic-segmentation-on-1)](https://paperswithcode.com/sota/open-vocabulary-semantic-segmentation-on-1?p=mask-adapter-the-devil-is-in-the-masks-for)
 </div>
 
 
