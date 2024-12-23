@@ -336,9 +336,7 @@ class MASK_Adapter(nn.Module):
         text_classifier, num_templates = self.get_text_classifier(dataname)
         
         text_classifier = torch.cat([text_classifier, F.normalize(self.void_embedding.weight, dim=-1)], dim=0)
-        
-        clip_vis_dense = self.visual_prediction_forward_convnext_2d(clip_feature)
-        
+                
         if self.train_maft:
             #https://github.com/jiaosiyu1999/MAFT-Plus/blob/fd12806df651d309883229de9503e40533f92689/maft/maft_plus.py#L352
             #For maftp,it uses a wrong reshape operation to get clip_vis_dense. Since we don't finetune cdt, we follow them. 
