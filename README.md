@@ -54,7 +54,7 @@ Yongkang Li<sup>1,\*</sup>, [Tianheng Cheng](https://scholar.google.com/citation
 |MAFTP-Base|ConvNeXt-B|13.8|34.5|18.5|57.5|95.5|[model](https://drive.google.com/file/d/1BeEeKOnWWIWIH-QWK_zLhAPUzCOnHuFG/view?usp=sharing)|
 |MAFTP-Base + Mask-Adapter|ConvNeXt-B|14.2|35.6|17.9|58.4|95.1 |[model](https://drive.google.com/file/d/1v0rdETOJl6oOKmef1L7WbtG16-zKvp2b/view?usp=sharing)|
 |MAFTP-Large|ConvNeXt-L|15.5|36.3|21.2|59.5|96.4|[model](https://drive.google.com/file/d/1EQo5guVuKkSSZj4bv0FQN_4X9h_Rwfe5/view?usp=sharing) |
-|MAFTP-Large + Mask-Adapter|ConvNeXt-L|16.1|38.2|22.7|60.4|95.8 |[model](https://drive.google.com/file/d/12eqDnTYaQlj9QUmWO1Vh9vvB81tKABl5/view?usp=sharing) |
+|MAFTP-Large + Mask-Adapter|ConvNeXt-L|16.2|38.2|22.7|60.4|95.8 |[model](https://drive.google.com/file/d/12eqDnTYaQlj9QUmWO1Vh9vvB81tKABl5/view?usp=sharing) |
 
 ## Citation
 If you Mask-Adapter useful in your research or applications, please consider giving us a star &#127775; and citing it by the following BibTeX entry.
