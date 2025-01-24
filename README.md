@@ -3,9 +3,9 @@
 <h1> Mask-Adapter </h1>
 <h3> The Devil is in the Masks for Open-Vocabulary Segmentation </h3>
 
-Yongkang Li<sup>1,\*</sup>, [Tianheng Cheng](https://scholar.google.com/citations?user=PH8rJHYAAAAJ&hl=zh-CN)<sup>1,\*</sup>, [Wenyu Liu](http://eic.hust.edu.cn/professor/liuwenyu)<sup>1</sup>, [Xinggang Wang](https://xwcv.github.io/)<sup>1,📧</sup>
+Yongkang Li<sup>\*</sup>, [Tianheng Cheng](https://scholar.google.com/citations?user=PH8rJHYAAAAJ&hl=zh-CN)<sup>\*</sup>, [Bin Feng](https://scholar.google.com/citations?user=nRc8u6gAAAAJ&hl=zh-CN), [Wenyu Liu](http://eic.hust.edu.cn/professor/liuwenyu), [Xinggang Wang](https://xwcv.github.io/)<sup>📧</sup>
 
-<sup>1</sup> Huazhong University of Science and Technology,
+Huazhong University of Science and Technology,
 
 
 (\* equal contribution, 📧 corresponding author)
