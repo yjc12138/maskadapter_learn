@@ -18,6 +18,10 @@ def main():
     for key in model_dict_sem_seg.keys():
         if key.startswith("sem_seg_head"):
             model_first_phase_dict["model"][key] = model_dict_sem_seg[key]
+            print(key)
+        if key.startswith("void"):
+            model_first_phase_dict['model'][key] = model_dict_sem_seg[key]
+            print(key)
 
     torch.save(model_first_phase_dict, args.output_path)
 
