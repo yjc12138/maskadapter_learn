@@ -15,9 +15,13 @@ def main():
     model_first_phase_dict = torch.load(args.model_first_phase_path)
     model_dict_sem_seg = torch.load(args.model_sem_seg_path)
 
-    for key in model_dict_sem_seg["model"].keys():
+    for key in model_dict_sem_seg['model'].keys():
         if key.startswith("sem_seg_head"):
-            model_first_phase_dict["model"][key] = model_dict_sem_seg["model"][key]
+            model_first_phase_dict['model'][key] = model_dict_sem_seg['model'][key]
+            print(key)
+        if key.startswith("void"):
+            model_first_phase_dict['model'][key] = model_dict_sem_seg['model'][key]
+            print(key)
 
     torch.save(model_first_phase_dict, args.output_path)
 
