@@ -1,0 +1,1964 @@
+[06/30 23:47:55] detectron2 INFO: Rank of current process: 0. World size: 1
+[06/30 23:47:57] detectron2 INFO: Environment info:
+-------------------------------  ------------------------------------------------------------------------------------------------
+sys.platform                     linux
+Python                           3.10.18 (main, Jun  5 2025, 13:14:17) [GCC 11.2.0]
+numpy                            2.1.2
+detectron2                       0.6 @/home/Tarkiya/project/NLP/code/yjc/detectron2/detectron2
+Compiler                         GCC 12.2
+CUDA compiler                    CUDA 12.6
+detectron2 arch flags            8.9
+DETECTRON2_ENV_MODULE            <not set>
+PyTorch                          2.7.1+cu126 @/home/Tarkiya/miniforge3/envs/maskadapter/lib/python3.10/site-packages/torch
+PyTorch debug build              False
+torch._C._GLIBCXX_USE_CXX11_ABI  True
+GPU available                    Yes
+GPU 0,1,2,3,4,5                  NVIDIA RTX 6000 Ada Generation (arch=8.9)
+Driver version                   560.35.05
+CUDA_HOME                        /usr/local/cuda
+Pillow                           8.4.0
+torchvision                      0.22.1+cu126 @/home/Tarkiya/miniforge3/envs/maskadapter/lib/python3.10/site-packages/torchvision
+torchvision arch flags           5.0, 6.0, 7.0, 7.5, 8.0, 8.6, 9.0
+fvcore                           0.1.5.post20221221
+iopath                           0.1.9
+cv2                              4.11.0
+-------------------------------  ------------------------------------------------------------------------------------------------
+PyTorch built with:
+  - GCC 11.2
+  - C++ Version: 201703
+  - Intel(R) oneAPI Math Kernel Library Version 2024.2-Product Build 20240605 for Intel(R) 64 architecture applications
+  - Intel(R) MKL-DNN v3.7.1 (Git Hash 8d263e693366ef8db40acc569cc7d8edf644556d)
+  - OpenMP 201511 (a.k.a. OpenMP 4.5)
+  - LAPACK is enabled (usually provided by MKL)
+  - NNPACK is enabled
+  - CPU capability usage: AVX512
+  - CUDA Runtime 12.6
+  - NVCC architecture flags: -gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_60,code=sm_60;-gencode;arch=compute_70,code=sm_70;-gencode;arch=compute_75,code=sm_75;-gencode;arch=compute_80,code=sm_80;-gencode;arch=compute_86,code=sm_86;-gencode;arch=compute_90,code=sm_90
+  - CuDNN 90.5.1
+  - Magma 2.6.1
+  - Build settings: BLAS_INFO=mkl, BUILD_TYPE=Release, COMMIT_SHA=e2d141dbde55c2a4370fac5165b0561b6af4798b, CUDA_VERSION=12.6, CUDNN_VERSION=9.5.1, CXX_COMPILER=/opt/rh/gcc-toolset-11/root/usr/bin/c++, CXX_FLAGS= -D_GLIBCXX_USE_CXX11_ABI=1 -fvisibility-inlines-hidden -DUSE_PTHREADPOOL -DNDEBUG -DUSE_KINETO -DLIBKINETO_NOROCTRACER -DLIBKINETO_NOXPUPTI=ON -DUSE_FBGEMM -DUSE_PYTORCH_QNNPACK -DUSE_XNNPACK -DSYMBOLICATE_MOBILE_DEBUG_HANDLE -O2 -fPIC -Wall -Wextra -Werror=return-type -Werror=non-virtual-dtor -Werror=range-loop-construct -Werror=bool-operation -Wnarrowing -Wno-missing-field-initializers -Wno-unknown-pragmas -Wno-unused-parameter -Wno-strict-overflow -Wno-strict-aliasing -Wno-stringop-overflow -Wsuggest-override -Wno-psabi -Wno-error=old-style-cast -fdiagnostics-color=always -faligned-new -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Wno-stringop-overflow, LAPACK_INFO=mkl, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, TORCH_VERSION=2.7.1, USE_CUDA=ON, USE_CUDNN=ON, USE_CUSPARSELT=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_GLOO=ON, USE_MKL=ON, USE_MKLDNN=ON, USE_MPI=OFF, USE_NCCL=1, USE_NNPACK=ON, USE_OPENMP=ON, USE_ROCM=OFF, USE_ROCM_KERNEL_ASSERT=OFF, 
+
+[06/30 23:47:57] detectron2 INFO: Command line arguments: Namespace(config_file='configs/mixed-mask-training/maftp/semantic/train_semantic_base_eval_a150.yaml', resume=False, eval_only=True, num_gpus=1, num_machines=1, machine_rank=0, dist_url='tcp://127.0.0.1:51562', opts=['MODEL.WEIGHTS', 'checkpoint/maftp_convnext_base_maskadapter.pth'])
+[06/30 23:47:57] detectron2 INFO: Contents of args.config_file=configs/mixed-mask-training/maftp/semantic/train_semantic_base_eval_a150.yaml:
+# python train_net.py --config-file configs/semantic/train_semantic_base.yaml  --num-gpus 8 
+
+_BASE_: ../maskformer2_R50_bs16_50ep.yaml
+MODEL:
+  META_ARCHITECTURE: "MAFT_Plus"  # FCCLIP MAFT_Plus
+  SEM_SEG_HEAD:
+    NAME: "FCCLIPHead"
+    NUM_CLASSES: 171
+  MASK_ADAPTER:
+    NAME: "MASKAdapterHead"
+    MASK_IN_CHANNELS: 16
+    NUM_CHANNELS: 768
+    USE_CHECKPOINT: False
+    NUM_OUTPUT_MAPS: 16
+    MASK_THRESHOLD: 0.45
+  FC_CLIP:
+    CLIP_MODEL_NAME: "convnext_base_w_320"  
+    CLIP_PRETRAINED_WEIGHTS: "laion_aesthetic_s13b_b82k_augreg"   
+    EMBED_DIM: 640
+    GEOMETRIC_ENSEMBLE_ALPHA: 0.7
+    GEOMETRIC_ENSEMBLE_BETA: 1.0
+  rc_weights: 0.1
+  MASK_FORMER:
+    TEST:
+      SEMANTIC_ON: True
+      INSTANCE_ON: False
+      PANOPTIC_ON: False
+      OBJECT_MASK_THRESHOLD: 0.0
+  cdt_params:
+  - 640
+  - 8
+
+INPUT:
+  DATASET_MAPPER_NAME: "mask_former_semantic" # mask_former_semantic coco_panoptic_lsj
+DATASETS:
+  TRAIN: ("openvocab_coco_2017_train_stuff_sem_seg",)  
+  TEST: ('openvocab_ade20k_panoptic_val',) 
+
+SOLVER:
+  IMS_PER_BATCH: 24
+  BASE_LR: 0.0001
+  STEPS: (43371, 47314)
+  MAX_ITER: 49286
+  CHECKPOINT_PERIOD: 2500
+TEST:
+  EVAL_PERIOD: 2500
+INPUT:
+  DATASET_MAPPER_NAME: "mask_former_semantic"  #
+OUTPUT_DIR: ./training/maftp-base/ade20k
+     
+[06/30 23:47:57] detectron2 INFO: Running with full config:
+CUDNN_BENCHMARK: false
+DATALOADER:
+  ASPECT_RATIO_GROUPING: true
+  DATASET_ANN:
+  - box
+  - box
+  DATASET_BS:
+  - 2
+  - 2
+  DATASET_RATIO:
+  - 1
+  - 1
+  FILTER_EMPTY_ANNOTATIONS: true
+  MULTI_DATASET_GROUPING: true
+  NUM_WORKERS: 8
+  REPEAT_SQRT: true
+  REPEAT_THRESHOLD: 0.0
+  SAMPLER_TRAIN: TrainingSampler
+  USE_DIFF_BS_SIZE: true
+  USE_RFS:
+  - false
+  - false
+DATASETS:
+  PRECOMPUTED_PROPOSAL_TOPK_TEST: 1000
+  PRECOMPUTED_PROPOSAL_TOPK_TRAIN: 2000
+  PROPOSAL_FILES_TEST: []
+  PROPOSAL_FILES_TRAIN: []
+  TEST:
+  - openvocab_ade20k_panoptic_val
+  TRAIN:
+  - openvocab_coco_2017_train_stuff_sem_seg
+FLOAT32_PRECISION: ''
+GLOBAL:
+  HACK: 1.0
+INPUT:
+  COLOR_AUG_SSD: false
+  CROP:
+    ENABLED: false
+    SINGLE_CATEGORY_MAX_AREA: 1.0
+    SIZE:
+    - 0.9
+    - 0.9
+    TYPE: relative_range
+  DATASET_MAPPER_NAME: mask_former_semantic
+  FORMAT: RGB
+  IMAGE_SIZE: 1024
+  MASK_FORMAT: polygon
+  MAX_SCALE: 2.0
+  MAX_SIZE_TEST: 896
+  MAX_SIZE_TRAIN: 1333
+  MIN_SCALE: 0.1
+  MIN_SIZE_TEST: 896
+  MIN_SIZE_TRAIN:
+  - 800
+  MIN_SIZE_TRAIN_SAMPLING: choice
+  RANDOM_FLIP: horizontal
+  SIZE_DIVISIBILITY: -1
+MODEL:
+  ANCHOR_GENERATOR:
+    ANGLES:
+    - - -90
+      - 0
+      - 90
+    ASPECT_RATIOS:
+    - - 0.5
+      - 1.0
+      - 2.0
+    NAME: DefaultAnchorGenerator
+    OFFSET: 0.0
+    SIZES:
+    - - 32
+      - 64
+      - 128
+      - 256
+      - 512
+  BACKBONE:
+    FREEZE_AT: 0
+    NAME: CLIP
+  DEVICE: cuda
+  FC_CLIP:
+    CLIP_MODEL_NAME: convnext_base_w_320
+    CLIP_PRETRAINED_WEIGHTS: laion_aesthetic_s13b_b82k_augreg
+    EMBED_DIM: 640
+    ENSEMBLE_ON_VALID_MASK: false
+    GEOMETRIC_ENSEMBLE_ALPHA: 0.7
+    GEOMETRIC_ENSEMBLE_BETA: 1.0
+  FPN:
+    FUSE_TYPE: sum
+    IN_FEATURES: []
+    NORM: ''
+    OUT_CHANNELS: 256
+  KEYPOINT_ON: false
+  LOAD_PROPOSALS: false
+  MASK_ADAPTER:
+    COS_WEIGHT: 5.0
+    IOU_THRESHOLD: 0.7
+    MASK_IN_CHANNELS: 16
+    MASK_THRESHOLD: 0.45
+    NAME: MASKAdapterHead
+    NUM_CHANNELS: 768
+    NUM_GT_MASKS: 16
+    NUM_OUTPUT_MAPS: 16
+    NUM_PRED_MASKS: 8
+    TRAIN_MAFT: false
+    USE_CHECKPOINT: false
+  MASK_FORMER:
+    CLASS_WEIGHT: 2.0
+    DEC_LAYERS: 10
+    DEEP_SUPERVISION: true
+    DICE_WEIGHT: 5.0
+    DIM_FEEDFORWARD: 2048
+    DROPOUT: 0.0
+    ENC_LAYERS: 0
+    ENFORCE_INPUT_PROJ: false
+    HIDDEN_DIM: 256
+    IMPORTANCE_SAMPLE_RATIO: 0.75
+    MASK_WEIGHT: 5.0
+    NHEADS: 8
+    NO_OBJECT_WEIGHT: 0.1
+    NUM_OBJECT_QUERIES: 100
+    OVERSAMPLE_RATIO: 3.0
+    PRE_NORM: false
+    SIZE_DIVISIBILITY: 32
+    TEST:
+      INSTANCE_ON: false
+      OBJECT_MASK_THRESHOLD: 0.0
+      OVERLAP_THRESHOLD: 0.7
+      PANOPTIC_ON: false
+      SEMANTIC_ON: true
+      SEM_SEG_POSTPROCESSING_BEFORE_INFERENCE: false
+    TRAIN_NUM_POINTS: 12544
+    TRANSFORMER_DECODER_NAME: MultiScaleMaskedTransformerDecoder
+    TRANSFORMER_IN_FEATURE: multi_scale_pixel_decoder
+  MASK_ON: false
+  META_ARCHITECTURE: MAFT_Plus
+  PANOPTIC_FPN:
+    COMBINE:
+      ENABLED: true
+      INSTANCES_CONFIDENCE_THRESH: 0.5
+      OVERLAP_THRESH: 0.5
+      STUFF_AREA_LIMIT: 4096
+    INSTANCE_LOSS_WEIGHT: 1.0
+  PIXEL_MEAN:
+  - 122.7709383
+  - 116.7460125
+  - 104.09373615
+  PIXEL_STD:
+  - 68.5005327
+  - 66.6321579
+  - 70.32316305
+  PROPOSAL_GENERATOR:
+    MIN_SIZE: 0
+    NAME: RPN
+  RESNETS:
+    DEFORM_MODULATED: false
+    DEFORM_NUM_GROUPS: 1
+    DEFORM_ON_PER_STAGE:
+    - false
+    - false
+    - false
+    - false
+    DEPTH: 50
+    NORM: FrozenBN
+    NUM_GROUPS: 1
+    OUT_FEATURES:
+    - res2
+    - res3
+    - res4
+    - res5
+    RES2_OUT_CHANNELS: 256
+    RES4_DILATION: 1
+    RES5_DILATION: 1
+    RES5_MULTI_GRID:
+    - 1
+    - 1
+    - 1
+    STEM_OUT_CHANNELS: 64
+    STEM_TYPE: basic
+    STRIDE_IN_1X1: false
+    WIDTH_PER_GROUP: 64
+  RETINANET:
+    BBOX_REG_LOSS_TYPE: smooth_l1
+    BBOX_REG_WEIGHTS: &id002
+    - 1.0
+    - 1.0
+    - 1.0
+    - 1.0
+    FOCAL_LOSS_ALPHA: 0.25
+    FOCAL_LOSS_GAMMA: 2.0
+    IN_FEATURES:
+    - p3
+    - p4
+    - p5
+    - p6
+    - p7
+    IOU_LABELS:
+    - 0
+    - -1
+    - 1
+    IOU_THRESHOLDS:
+    - 0.4
+    - 0.5
+    NMS_THRESH_TEST: 0.5
+    NORM: ''
+    NUM_CLASSES: 80
+    NUM_CONVS: 4
+    PRIOR_PROB: 0.01
+    SCORE_THRESH_TEST: 0.05
+    SMOOTH_L1_LOSS_BETA: 0.1
+    TOPK_CANDIDATES_TEST: 1000
+  ROI_BOX_CASCADE_HEAD:
+    BBOX_REG_WEIGHTS:
+    - &id001
+      - 10.0
+      - 10.0
+      - 5.0
+      - 5.0
+    - - 20.0
+      - 20.0
+      - 10.0
+      - 10.0
+    - - 30.0
+      - 30.0
+      - 15.0
+      - 15.0
+    IOUS:
+    - 0.5
+    - 0.6
+    - 0.7
+  ROI_BOX_HEAD:
+    BBOX_REG_LOSS_TYPE: smooth_l1
+    BBOX_REG_LOSS_WEIGHT: 1.0
+    BBOX_REG_WEIGHTS: *id001
+    CLS_AGNOSTIC_BBOX_REG: false
+    CONV_DIM: 256
+    FC_DIM: 1024
+    FED_LOSS_FREQ_WEIGHT_POWER: 0.5
+    FED_LOSS_NUM_CLASSES: 50
+    NAME: ''
+    NORM: ''
+    NUM_CONV: 0
+    NUM_FC: 0
+    POOLER_RESOLUTION: 14
+    POOLER_SAMPLING_RATIO: 0
+    POOLER_TYPE: ROIAlignV2
+    SMOOTH_L1_BETA: 0.0
+    TRAIN_ON_PRED_BOXES: false
+    USE_FED_LOSS: false
+    USE_SIGMOID_CE: false
+  ROI_HEADS:
+    BATCH_SIZE_PER_IMAGE: 512
+    IN_FEATURES:
+    - res4
+    IOU_LABELS:
+    - 0
+    - 1
+    IOU_THRESHOLDS:
+    - 0.5
+    NAME: Res5ROIHeads
+    NMS_THRESH_TEST: 0.5
+    NUM_CLASSES: 80
+    POSITIVE_FRACTION: 0.25
+    PROPOSAL_APPEND_GT: true
+    SCORE_THRESH_TEST: 0.05
+  ROI_KEYPOINT_HEAD:
+    CONV_DIMS:
+    - 512
+    - 512
+    - 512
+    - 512
+    - 512
+    - 512
+    - 512
+    - 512
+    LOSS_WEIGHT: 1.0
+    MIN_KEYPOINTS_PER_IMAGE: 1
+    NAME: KRCNNConvDeconvUpsampleHead
+    NORMALIZE_LOSS_BY_VISIBLE_KEYPOINTS: true
+    NUM_KEYPOINTS: 17
+    POOLER_RESOLUTION: 14
+    POOLER_SAMPLING_RATIO: 0
+    POOLER_TYPE: ROIAlignV2
+  ROI_MASK_HEAD:
+    CLS_AGNOSTIC_MASK: false
+    CONV_DIM: 256
+    NAME: MaskRCNNConvUpsampleHead
+    NORM: ''
+    NUM_CONV: 0
+    POOLER_RESOLUTION: 14
+    POOLER_SAMPLING_RATIO: 0
+    POOLER_TYPE: ROIAlignV2
+  RPN:
+    BATCH_SIZE_PER_IMAGE: 256
+    BBOX_REG_LOSS_TYPE: smooth_l1
+    BBOX_REG_LOSS_WEIGHT: 1.0
+    BBOX_REG_WEIGHTS: *id002
+    BOUNDARY_THRESH: -1
+    CONV_DIMS:
+    - -1
+    HEAD_NAME: StandardRPNHead
+    IN_FEATURES:
+    - res4
+    IOU_LABELS:
+    - 0
+    - -1
+    - 1
+    IOU_THRESHOLDS:
+    - 0.3
+    - 0.7
+    LOSS_WEIGHT: 1.0
+    NMS_THRESH: 0.7
+    POSITIVE_FRACTION: 0.5
+    POST_NMS_TOPK_TEST: 1000
+    POST_NMS_TOPK_TRAIN: 2000
+    PRE_NMS_TOPK_TEST: 6000
+    PRE_NMS_TOPK_TRAIN: 12000
+    SMOOTH_L1_BETA: 0.0
+  SEM_SEG_HEAD:
+    ASPP_CHANNELS: 256
+    ASPP_DILATIONS:
+    - 6
+    - 12
+    - 18
+    ASPP_DROPOUT: 0.1
+    COMMON_STRIDE: 4
+    CONVS_DIM: 256
+    DEFORMABLE_TRANSFORMER_ENCODER_IN_FEATURES:
+    - res3
+    - res4
+    - res5
+    DEFORMABLE_TRANSFORMER_ENCODER_N_HEADS: 8
+    DEFORMABLE_TRANSFORMER_ENCODER_N_POINTS: 4
+    IGNORE_VALUE: 255
+    IN_FEATURES:
+    - res2
+    - res3
+    - res4
+    - res5
+    LOSS_TYPE: hard_pixel_mining
+    LOSS_WEIGHT: 1.0
+    MASK_DIM: 256
+    NAME: FCCLIPHead
+    NORM: GN
+    NUM_CLASSES: 171
+    PIXEL_DECODER_NAME: MSDeformAttnPixelDecoder
+    PROJECT_CHANNELS:
+    - 48
+    PROJECT_FEATURES:
+    - res2
+    TRANSFORMER_ENC_LAYERS: 6
+    USE_DEPTHWISE_SEPARABLE_CONV: false
+  SWIN:
+    APE: false
+    ATTN_DROP_RATE: 0.0
+    DEPTHS:
+    - 2
+    - 2
+    - 6
+    - 2
+    DROP_PATH_RATE: 0.3
+    DROP_RATE: 0.0
+    EMBED_DIM: 96
+    MLP_RATIO: 4.0
+    NUM_HEADS:
+    - 3
+    - 6
+    - 12
+    - 24
+    OUT_FEATURES:
+    - res2
+    - res3
+    - res4
+    - res5
+    PATCH_NORM: true
+    PATCH_SIZE: 4
+    PRETRAIN_IMG_SIZE: 224
+    QKV_BIAS: true
+    QK_SCALE: null
+    USE_CHECKPOINT: false
+    WINDOW_SIZE: 7
+  WEIGHTS: checkpoint/maftp_convnext_base_maskadapter.pth
+  cdt_params:
+  - 640
+  - 8
+  rc_weights: 0.1
+  relu: relu
+OUTPUT_DIR: ./training/maftp-base/ade20k
+SEED: 123
+SOLVER:
+  AMP:
+    ENABLED: true
+  BACKBONE_MULTIPLIER: 0.1
+  BASE_LR: 0.0001
+  BASE_LR_END: 0.0
+  BIAS_LR_FACTOR: 1.0
+  CHECKPOINT_PERIOD: 2500
+  CLIP_GRADIENTS:
+    CLIP_TYPE: full_model
+    CLIP_VALUE: 1.0
+    ENABLED: true
+    NORM_TYPE: 2.0
+  GAMMA: 0.1
+  IMS_PER_BATCH: 24
+  LR_SCHEDULER_NAME: WarmupPolyLR
+  MAX_ITER: 49286
+  MOMENTUM: 0.9
+  NESTEROV: false
+  NUM_DECAYS: 3
+  OPTIMIZER: ADAMW
+  POLY_LR_CONSTANT_ENDING: 0.0
+  POLY_LR_POWER: 0.9
+  REFERENCE_WORLD_SIZE: 0
+  RESCALE_INTERVAL: false
+  STEPS:
+  - 43371
+  - 47314
+  WARMUP_FACTOR: 1.0
+  WARMUP_ITERS: 10
+  WARMUP_METHOD: linear
+  WEIGHT_DECAY: 2.0e-05
+  WEIGHT_DECAY_BIAS: null
+  WEIGHT_DECAY_EMBED: 0.0
+  WEIGHT_DECAY_NORM: 0.0
+TEST:
+  AUG:
+    ENABLED: false
+    FLIP: true
+    MAX_SIZE: 4000
+    MIN_SIZES:
+    - 400
+    - 500
+    - 600
+    - 700
+    - 800
+    - 900
+    - 1000
+    - 1100
+    - 1200
+  DETECTIONS_PER_IMAGE: 100
+  EVAL_PERIOD: 2500
+  EXPECTED_RESULTS: []
+  KEYPOINT_OKS_SIGMAS: []
+  PRECISE_BN:
+    ENABLED: false
+    NUM_ITER: 200
+VERSION: 2
+VIS_PERIOD: 0
+
+[06/30 23:47:57] detectron2 INFO: Full config saved to ./training/maftp-base/ade20k/config.yaml
+[06/30 23:49:14] detectron2 INFO: Rank of current process: 0. World size: 1
+[06/30 23:49:16] detectron2 INFO: Environment info:
+-------------------------------  ------------------------------------------------------------------------------------------------
+sys.platform                     linux
+Python                           3.10.18 (main, Jun  5 2025, 13:14:17) [GCC 11.2.0]
+numpy                            2.1.2
+detectron2                       0.6 @/home/Tarkiya/project/NLP/code/yjc/detectron2/detectron2
+Compiler                         GCC 12.2
+CUDA compiler                    CUDA 12.6
+detectron2 arch flags            8.9
+DETECTRON2_ENV_MODULE            <not set>
+PyTorch                          2.7.1+cu126 @/home/Tarkiya/miniforge3/envs/maskadapter/lib/python3.10/site-packages/torch
+PyTorch debug build              False
+torch._C._GLIBCXX_USE_CXX11_ABI  True
+GPU available                    Yes
+GPU 0,1,2,3,4,5                  NVIDIA RTX 6000 Ada Generation (arch=8.9)
+Driver version                   560.35.05
+CUDA_HOME                        /usr/local/cuda
+Pillow                           8.4.0
+torchvision                      0.22.1+cu126 @/home/Tarkiya/miniforge3/envs/maskadapter/lib/python3.10/site-packages/torchvision
+torchvision arch flags           5.0, 6.0, 7.0, 7.5, 8.0, 8.6, 9.0
+fvcore                           0.1.5.post20221221
+iopath                           0.1.9
+cv2                              4.11.0
+-------------------------------  ------------------------------------------------------------------------------------------------
+PyTorch built with:
+  - GCC 11.2
+  - C++ Version: 201703
+  - Intel(R) oneAPI Math Kernel Library Version 2024.2-Product Build 20240605 for Intel(R) 64 architecture applications
+  - Intel(R) MKL-DNN v3.7.1 (Git Hash 8d263e693366ef8db40acc569cc7d8edf644556d)
+  - OpenMP 201511 (a.k.a. OpenMP 4.5)
+  - LAPACK is enabled (usually provided by MKL)
+  - NNPACK is enabled
+  - CPU capability usage: AVX512
+  - CUDA Runtime 12.6
+  - NVCC architecture flags: -gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_60,code=sm_60;-gencode;arch=compute_70,code=sm_70;-gencode;arch=compute_75,code=sm_75;-gencode;arch=compute_80,code=sm_80;-gencode;arch=compute_86,code=sm_86;-gencode;arch=compute_90,code=sm_90
+  - CuDNN 90.5.1
+  - Magma 2.6.1
+  - Build settings: BLAS_INFO=mkl, BUILD_TYPE=Release, COMMIT_SHA=e2d141dbde55c2a4370fac5165b0561b6af4798b, CUDA_VERSION=12.6, CUDNN_VERSION=9.5.1, CXX_COMPILER=/opt/rh/gcc-toolset-11/root/usr/bin/c++, CXX_FLAGS= -D_GLIBCXX_USE_CXX11_ABI=1 -fvisibility-inlines-hidden -DUSE_PTHREADPOOL -DNDEBUG -DUSE_KINETO -DLIBKINETO_NOROCTRACER -DLIBKINETO_NOXPUPTI=ON -DUSE_FBGEMM -DUSE_PYTORCH_QNNPACK -DUSE_XNNPACK -DSYMBOLICATE_MOBILE_DEBUG_HANDLE -O2 -fPIC -Wall -Wextra -Werror=return-type -Werror=non-virtual-dtor -Werror=range-loop-construct -Werror=bool-operation -Wnarrowing -Wno-missing-field-initializers -Wno-unknown-pragmas -Wno-unused-parameter -Wno-strict-overflow -Wno-strict-aliasing -Wno-stringop-overflow -Wsuggest-override -Wno-psabi -Wno-error=old-style-cast -fdiagnostics-color=always -faligned-new -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Wno-stringop-overflow, LAPACK_INFO=mkl, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, TORCH_VERSION=2.7.1, USE_CUDA=ON, USE_CUDNN=ON, USE_CUSPARSELT=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_GLOO=ON, USE_MKL=ON, USE_MKLDNN=ON, USE_MPI=OFF, USE_NCCL=1, USE_NNPACK=ON, USE_OPENMP=ON, USE_ROCM=OFF, USE_ROCM_KERNEL_ASSERT=OFF, 
+
+[06/30 23:49:16] detectron2 INFO: Command line arguments: Namespace(config_file='configs/mixed-mask-training/maftp/semantic/train_semantic_base_eval_a150.yaml', resume=False, eval_only=True, num_gpus=1, num_machines=1, machine_rank=0, dist_url='tcp://127.0.0.1:51562', opts=['MODEL.WEIGHTS', 'checkpoint/maftp_convnext_base_maskadapter.pth'])
+[06/30 23:49:16] detectron2 INFO: Contents of args.config_file=configs/mixed-mask-training/maftp/semantic/train_semantic_base_eval_a150.yaml:
+# python train_net.py --config-file configs/semantic/train_semantic_base.yaml  --num-gpus 8 
+
+_BASE_: ../maskformer2_R50_bs16_50ep.yaml
+MODEL:
+  META_ARCHITECTURE: "MAFT_Plus"  # FCCLIP MAFT_Plus
+  SEM_SEG_HEAD:
+    NAME: "FCCLIPHead"
+    NUM_CLASSES: 171
+  MASK_ADAPTER:
+    NAME: "MASKAdapterHead"
+    MASK_IN_CHANNELS: 16
+    NUM_CHANNELS: 768
+    USE_CHECKPOINT: False
+    NUM_OUTPUT_MAPS: 16
+    MASK_THRESHOLD: 0.45
+  FC_CLIP:
+    CLIP_MODEL_NAME: "convnext_base_w_320"  
+    CLIP_PRETRAINED_WEIGHTS: "laion_aesthetic_s13b_b82k_augreg"   
+    EMBED_DIM: 640
+    GEOMETRIC_ENSEMBLE_ALPHA: 0.7
+    GEOMETRIC_ENSEMBLE_BETA: 1.0
+  rc_weights: 0.1
+  MASK_FORMER:
+    TEST:
+      SEMANTIC_ON: True
+      INSTANCE_ON: False
+      PANOPTIC_ON: False
+      OBJECT_MASK_THRESHOLD: 0.0
+  cdt_params:
+  - 640
+  - 8
+
+INPUT:
+  DATASET_MAPPER_NAME: "mask_former_semantic" # mask_former_semantic coco_panoptic_lsj
+DATASETS:
+  TRAIN: ("openvocab_coco_2017_train_stuff_sem_seg",)  
+  TEST: ('openvocab_ade20k_panoptic_val',) 
+
+SOLVER:
+  IMS_PER_BATCH: 24
+  BASE_LR: 0.0001
+  STEPS: (43371, 47314)
+  MAX_ITER: 49286
+  CHECKPOINT_PERIOD: 2500
+TEST:
+  EVAL_PERIOD: 2500
+INPUT:
+  DATASET_MAPPER_NAME: "mask_former_semantic"  #
+OUTPUT_DIR: ./training/maftp-base/ade20k
+     
+[06/30 23:49:16] detectron2 INFO: Running with full config:
+CUDNN_BENCHMARK: false
+DATALOADER:
+  ASPECT_RATIO_GROUPING: true
+  DATASET_ANN:
+  - box
+  - box
+  DATASET_BS:
+  - 2
+  - 2
+  DATASET_RATIO:
+  - 1
+  - 1
+  FILTER_EMPTY_ANNOTATIONS: true
+  MULTI_DATASET_GROUPING: true
+  NUM_WORKERS: 8
+  REPEAT_SQRT: true
+  REPEAT_THRESHOLD: 0.0
+  SAMPLER_TRAIN: TrainingSampler
+  USE_DIFF_BS_SIZE: true
+  USE_RFS:
+  - false
+  - false
+DATASETS:
+  PRECOMPUTED_PROPOSAL_TOPK_TEST: 1000
+  PRECOMPUTED_PROPOSAL_TOPK_TRAIN: 2000
+  PROPOSAL_FILES_TEST: []
+  PROPOSAL_FILES_TRAIN: []
+  TEST:
+  - openvocab_ade20k_panoptic_val
+  TRAIN:
+  - openvocab_coco_2017_train_stuff_sem_seg
+FLOAT32_PRECISION: ''
+GLOBAL:
+  HACK: 1.0
+INPUT:
+  COLOR_AUG_SSD: false
+  CROP:
+    ENABLED: false
+    SINGLE_CATEGORY_MAX_AREA: 1.0
+    SIZE:
+    - 0.9
+    - 0.9
+    TYPE: relative_range
+  DATASET_MAPPER_NAME: mask_former_semantic
+  FORMAT: RGB
+  IMAGE_SIZE: 1024
+  MASK_FORMAT: polygon
+  MAX_SCALE: 2.0
+  MAX_SIZE_TEST: 896
+  MAX_SIZE_TRAIN: 1333
+  MIN_SCALE: 0.1
+  MIN_SIZE_TEST: 896
+  MIN_SIZE_TRAIN:
+  - 800
+  MIN_SIZE_TRAIN_SAMPLING: choice
+  RANDOM_FLIP: horizontal
+  SIZE_DIVISIBILITY: -1
+MODEL:
+  ANCHOR_GENERATOR:
+    ANGLES:
+    - - -90
+      - 0
+      - 90
+    ASPECT_RATIOS:
+    - - 0.5
+      - 1.0
+      - 2.0
+    NAME: DefaultAnchorGenerator
+    OFFSET: 0.0
+    SIZES:
+    - - 32
+      - 64
+      - 128
+      - 256
+      - 512
+  BACKBONE:
+    FREEZE_AT: 0
+    NAME: CLIP
+  DEVICE: cuda
+  FC_CLIP:
+    CLIP_MODEL_NAME: convnext_base_w_320
+    CLIP_PRETRAINED_WEIGHTS: laion_aesthetic_s13b_b82k_augreg
+    EMBED_DIM: 640
+    ENSEMBLE_ON_VALID_MASK: false
+    GEOMETRIC_ENSEMBLE_ALPHA: 0.7
+    GEOMETRIC_ENSEMBLE_BETA: 1.0
+  FPN:
+    FUSE_TYPE: sum
+    IN_FEATURES: []
+    NORM: ''
+    OUT_CHANNELS: 256
+  KEYPOINT_ON: false
+  LOAD_PROPOSALS: false
+  MASK_ADAPTER:
+    COS_WEIGHT: 5.0
+    IOU_THRESHOLD: 0.7
+    MASK_IN_CHANNELS: 16
+    MASK_THRESHOLD: 0.45
+    NAME: MASKAdapterHead
+    NUM_CHANNELS: 768
+    NUM_GT_MASKS: 16
+    NUM_OUTPUT_MAPS: 16
+    NUM_PRED_MASKS: 8
+    TRAIN_MAFT: false
+    USE_CHECKPOINT: false
+  MASK_FORMER:
+    CLASS_WEIGHT: 2.0
+    DEC_LAYERS: 10
+    DEEP_SUPERVISION: true
+    DICE_WEIGHT: 5.0
+    DIM_FEEDFORWARD: 2048
+    DROPOUT: 0.0
+    ENC_LAYERS: 0
+    ENFORCE_INPUT_PROJ: false
+    HIDDEN_DIM: 256
+    IMPORTANCE_SAMPLE_RATIO: 0.75
+    MASK_WEIGHT: 5.0
+    NHEADS: 8
+    NO_OBJECT_WEIGHT: 0.1
+    NUM_OBJECT_QUERIES: 100
+    OVERSAMPLE_RATIO: 3.0
+    PRE_NORM: false
+    SIZE_DIVISIBILITY: 32
+    TEST:
+      INSTANCE_ON: false
+      OBJECT_MASK_THRESHOLD: 0.0
+      OVERLAP_THRESHOLD: 0.7
+      PANOPTIC_ON: false
+      SEMANTIC_ON: true
+      SEM_SEG_POSTPROCESSING_BEFORE_INFERENCE: false
+    TRAIN_NUM_POINTS: 12544
+    TRANSFORMER_DECODER_NAME: MultiScaleMaskedTransformerDecoder
+    TRANSFORMER_IN_FEATURE: multi_scale_pixel_decoder
+  MASK_ON: false
+  META_ARCHITECTURE: MAFT_Plus
+  PANOPTIC_FPN:
+    COMBINE:
+      ENABLED: true
+      INSTANCES_CONFIDENCE_THRESH: 0.5
+      OVERLAP_THRESH: 0.5
+      STUFF_AREA_LIMIT: 4096
+    INSTANCE_LOSS_WEIGHT: 1.0
+  PIXEL_MEAN:
+  - 122.7709383
+  - 116.7460125
+  - 104.09373615
+  PIXEL_STD:
+  - 68.5005327
+  - 66.6321579
+  - 70.32316305
+  PROPOSAL_GENERATOR:
+    MIN_SIZE: 0
+    NAME: RPN
+  RESNETS:
+    DEFORM_MODULATED: false
+    DEFORM_NUM_GROUPS: 1
+    DEFORM_ON_PER_STAGE:
+    - false
+    - false
+    - false
+    - false
+    DEPTH: 50
+    NORM: FrozenBN
+    NUM_GROUPS: 1
+    OUT_FEATURES:
+    - res2
+    - res3
+    - res4
+    - res5
+    RES2_OUT_CHANNELS: 256
+    RES4_DILATION: 1
+    RES5_DILATION: 1
+    RES5_MULTI_GRID:
+    - 1
+    - 1
+    - 1
+    STEM_OUT_CHANNELS: 64
+    STEM_TYPE: basic
+    STRIDE_IN_1X1: false
+    WIDTH_PER_GROUP: 64
+  RETINANET:
+    BBOX_REG_LOSS_TYPE: smooth_l1
+    BBOX_REG_WEIGHTS: &id002
+    - 1.0
+    - 1.0
+    - 1.0
+    - 1.0
+    FOCAL_LOSS_ALPHA: 0.25
+    FOCAL_LOSS_GAMMA: 2.0
+    IN_FEATURES:
+    - p3
+    - p4
+    - p5
+    - p6
+    - p7
+    IOU_LABELS:
+    - 0
+    - -1
+    - 1
+    IOU_THRESHOLDS:
+    - 0.4
+    - 0.5
+    NMS_THRESH_TEST: 0.5
+    NORM: ''
+    NUM_CLASSES: 80
+    NUM_CONVS: 4
+    PRIOR_PROB: 0.01
+    SCORE_THRESH_TEST: 0.05
+    SMOOTH_L1_LOSS_BETA: 0.1
+    TOPK_CANDIDATES_TEST: 1000
+  ROI_BOX_CASCADE_HEAD:
+    BBOX_REG_WEIGHTS:
+    - &id001
+      - 10.0
+      - 10.0
+      - 5.0
+      - 5.0
+    - - 20.0
+      - 20.0
+      - 10.0
+      - 10.0
+    - - 30.0
+      - 30.0
+      - 15.0
+      - 15.0
+    IOUS:
+    - 0.5
+    - 0.6
+    - 0.7
+  ROI_BOX_HEAD:
+    BBOX_REG_LOSS_TYPE: smooth_l1
+    BBOX_REG_LOSS_WEIGHT: 1.0
+    BBOX_REG_WEIGHTS: *id001
+    CLS_AGNOSTIC_BBOX_REG: false
+    CONV_DIM: 256
+    FC_DIM: 1024
+    FED_LOSS_FREQ_WEIGHT_POWER: 0.5
+    FED_LOSS_NUM_CLASSES: 50
+    NAME: ''
+    NORM: ''
+    NUM_CONV: 0
+    NUM_FC: 0
+    POOLER_RESOLUTION: 14
+    POOLER_SAMPLING_RATIO: 0
+    POOLER_TYPE: ROIAlignV2
+    SMOOTH_L1_BETA: 0.0
+    TRAIN_ON_PRED_BOXES: false
+    USE_FED_LOSS: false
+    USE_SIGMOID_CE: false
+  ROI_HEADS:
+    BATCH_SIZE_PER_IMAGE: 512
+    IN_FEATURES:
+    - res4
+    IOU_LABELS:
+    - 0
+    - 1
+    IOU_THRESHOLDS:
+    - 0.5
+    NAME: Res5ROIHeads
+    NMS_THRESH_TEST: 0.5
+    NUM_CLASSES: 80
+    POSITIVE_FRACTION: 0.25
+    PROPOSAL_APPEND_GT: true
+    SCORE_THRESH_TEST: 0.05
+  ROI_KEYPOINT_HEAD:
+    CONV_DIMS:
+    - 512
+    - 512
+    - 512
+    - 512
+    - 512
+    - 512
+    - 512
+    - 512
+    LOSS_WEIGHT: 1.0
+    MIN_KEYPOINTS_PER_IMAGE: 1
+    NAME: KRCNNConvDeconvUpsampleHead
+    NORMALIZE_LOSS_BY_VISIBLE_KEYPOINTS: true
+    NUM_KEYPOINTS: 17
+    POOLER_RESOLUTION: 14
+    POOLER_SAMPLING_RATIO: 0
+    POOLER_TYPE: ROIAlignV2
+  ROI_MASK_HEAD:
+    CLS_AGNOSTIC_MASK: false
+    CONV_DIM: 256
+    NAME: MaskRCNNConvUpsampleHead
+    NORM: ''
+    NUM_CONV: 0
+    POOLER_RESOLUTION: 14
+    POOLER_SAMPLING_RATIO: 0
+    POOLER_TYPE: ROIAlignV2
+  RPN:
+    BATCH_SIZE_PER_IMAGE: 256
+    BBOX_REG_LOSS_TYPE: smooth_l1
+    BBOX_REG_LOSS_WEIGHT: 1.0
+    BBOX_REG_WEIGHTS: *id002
+    BOUNDARY_THRESH: -1
+    CONV_DIMS:
+    - -1
+    HEAD_NAME: StandardRPNHead
+    IN_FEATURES:
+    - res4
+    IOU_LABELS:
+    - 0
+    - -1
+    - 1
+    IOU_THRESHOLDS:
+    - 0.3
+    - 0.7
+    LOSS_WEIGHT: 1.0
+    NMS_THRESH: 0.7
+    POSITIVE_FRACTION: 0.5
+    POST_NMS_TOPK_TEST: 1000
+    POST_NMS_TOPK_TRAIN: 2000
+    PRE_NMS_TOPK_TEST: 6000
+    PRE_NMS_TOPK_TRAIN: 12000
+    SMOOTH_L1_BETA: 0.0
+  SEM_SEG_HEAD:
+    ASPP_CHANNELS: 256
+    ASPP_DILATIONS:
+    - 6
+    - 12
+    - 18
+    ASPP_DROPOUT: 0.1
+    COMMON_STRIDE: 4
+    CONVS_DIM: 256
+    DEFORMABLE_TRANSFORMER_ENCODER_IN_FEATURES:
+    - res3
+    - res4
+    - res5
+    DEFORMABLE_TRANSFORMER_ENCODER_N_HEADS: 8
+    DEFORMABLE_TRANSFORMER_ENCODER_N_POINTS: 4
+    IGNORE_VALUE: 255
+    IN_FEATURES:
+    - res2
+    - res3
+    - res4
+    - res5
+    LOSS_TYPE: hard_pixel_mining
+    LOSS_WEIGHT: 1.0
+    MASK_DIM: 256
+    NAME: FCCLIPHead
+    NORM: GN
+    NUM_CLASSES: 171
+    PIXEL_DECODER_NAME: MSDeformAttnPixelDecoder
+    PROJECT_CHANNELS:
+    - 48
+    PROJECT_FEATURES:
+    - res2
+    TRANSFORMER_ENC_LAYERS: 6
+    USE_DEPTHWISE_SEPARABLE_CONV: false
+  SWIN:
+    APE: false
+    ATTN_DROP_RATE: 0.0
+    DEPTHS:
+    - 2
+    - 2
+    - 6
+    - 2
+    DROP_PATH_RATE: 0.3
+    DROP_RATE: 0.0
+    EMBED_DIM: 96
+    MLP_RATIO: 4.0
+    NUM_HEADS:
+    - 3
+    - 6
+    - 12
+    - 24
+    OUT_FEATURES:
+    - res2
+    - res3
+    - res4
+    - res5
+    PATCH_NORM: true
+    PATCH_SIZE: 4
+    PRETRAIN_IMG_SIZE: 224
+    QKV_BIAS: true
+    QK_SCALE: null
+    USE_CHECKPOINT: false
+    WINDOW_SIZE: 7
+  WEIGHTS: checkpoint/maftp_convnext_base_maskadapter.pth
+  cdt_params:
+  - 640
+  - 8
+  rc_weights: 0.1
+  relu: relu
+OUTPUT_DIR: ./training/maftp-base/ade20k
+SEED: 123
+SOLVER:
+  AMP:
+    ENABLED: true
+  BACKBONE_MULTIPLIER: 0.1
+  BASE_LR: 0.0001
+  BASE_LR_END: 0.0
+  BIAS_LR_FACTOR: 1.0
+  CHECKPOINT_PERIOD: 2500
+  CLIP_GRADIENTS:
+    CLIP_TYPE: full_model
+    CLIP_VALUE: 1.0
+    ENABLED: true
+    NORM_TYPE: 2.0
+  GAMMA: 0.1
+  IMS_PER_BATCH: 24
+  LR_SCHEDULER_NAME: WarmupPolyLR
+  MAX_ITER: 49286
+  MOMENTUM: 0.9
+  NESTEROV: false
+  NUM_DECAYS: 3
+  OPTIMIZER: ADAMW
+  POLY_LR_CONSTANT_ENDING: 0.0
+  POLY_LR_POWER: 0.9
+  REFERENCE_WORLD_SIZE: 0
+  RESCALE_INTERVAL: false
+  STEPS:
+  - 43371
+  - 47314
+  WARMUP_FACTOR: 1.0
+  WARMUP_ITERS: 10
+  WARMUP_METHOD: linear
+  WEIGHT_DECAY: 2.0e-05
+  WEIGHT_DECAY_BIAS: null
+  WEIGHT_DECAY_EMBED: 0.0
+  WEIGHT_DECAY_NORM: 0.0
+TEST:
+  AUG:
+    ENABLED: false
+    FLIP: true
+    MAX_SIZE: 4000
+    MIN_SIZES:
+    - 400
+    - 500
+    - 600
+    - 700
+    - 800
+    - 900
+    - 1000
+    - 1100
+    - 1200
+  DETECTIONS_PER_IMAGE: 100
+  EVAL_PERIOD: 2500
+  EXPECTED_RESULTS: []
+  KEYPOINT_OKS_SIGMAS: []
+  PRECISE_BN:
+    ENABLED: false
+    NUM_ITER: 200
+VERSION: 2
+VIS_PERIOD: 0
+
+[06/30 23:49:16] detectron2 INFO: Full config saved to ./training/maftp-base/ade20k/config.yaml
+[06/30 23:50:18] d2.engine.defaults INFO: Model:
+MAFT_Plus(
+  (backbone): CLIP(
+    (clip_model): CLIP(
+      (visual): TimmModel(
+        (trunk): ConvNeXt(
+          (stem): Sequential(
+            (0): Conv2d(3, 128, kernel_size=(4, 4), stride=(4, 4))
+            (1): LayerNorm2d((128,), eps=1e-06, elementwise_affine=True)
+          )
+          (stages): Sequential(
+            (0): ConvNeXtStage(
+              (downsample): Identity()
+              (blocks): Sequential(
+                (0): ConvNeXtBlock(
+                  (conv_dw): Conv2d(128, 128, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=128)
+                  (norm): LayerNorm((128,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=128, out_features=512, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=512, out_features=128, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): Identity()
+                )
+                (1): ConvNeXtBlock(
+                  (conv_dw): Conv2d(128, 128, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=128)
+                  (norm): LayerNorm((128,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=128, out_features=512, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=512, out_features=128, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.003)
+                )
+                (2): ConvNeXtBlock(
+                  (conv_dw): Conv2d(128, 128, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=128)
+                  (norm): LayerNorm((128,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=128, out_features=512, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=512, out_features=128, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.006)
+                )
+              )
+            )
+            (1): ConvNeXtStage(
+              (downsample): Sequential(
+                (0): LayerNorm2d((128,), eps=1e-06, elementwise_affine=True)
+                (1): Conv2d(128, 256, kernel_size=(2, 2), stride=(2, 2))
+              )
+              (blocks): Sequential(
+                (0): ConvNeXtBlock(
+                  (conv_dw): Conv2d(256, 256, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=256)
+                  (norm): LayerNorm((256,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=256, out_features=1024, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=1024, out_features=256, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.009)
+                )
+                (1): ConvNeXtBlock(
+                  (conv_dw): Conv2d(256, 256, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=256)
+                  (norm): LayerNorm((256,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=256, out_features=1024, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=1024, out_features=256, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.011)
+                )
+                (2): ConvNeXtBlock(
+                  (conv_dw): Conv2d(256, 256, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=256)
+                  (norm): LayerNorm((256,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=256, out_features=1024, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=1024, out_features=256, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.014)
+                )
+              )
+            )
+            (2): ConvNeXtStage(
+              (downsample): Sequential(
+                (0): LayerNorm2d((256,), eps=1e-06, elementwise_affine=True)
+                (1): Conv2d(256, 512, kernel_size=(2, 2), stride=(2, 2))
+              )
+              (blocks): Sequential(
+                (0): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.017)
+                )
+                (1): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.020)
+                )
+                (2): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.023)
+                )
+                (3): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.026)
+                )
+                (4): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.029)
+                )
+                (5): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.031)
+                )
+                (6): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.034)
+                )
+                (7): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.037)
+                )
+                (8): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.040)
+                )
+                (9): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.043)
+                )
+                (10): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.046)
+                )
+                (11): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.049)
+                )
+                (12): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.051)
+                )
+                (13): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.054)
+                )
+                (14): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.057)
+                )
+                (15): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.060)
+                )
+                (16): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.063)
+                )
+                (17): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.066)
+                )
+                (18): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.069)
+                )
+                (19): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.071)
+                )
+                (20): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.074)
+                )
+                (21): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.077)
+                )
+                (22): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.080)
+                )
+                (23): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.083)
+                )
+                (24): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.086)
+                )
+                (25): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.089)
+                )
+                (26): ConvNeXtBlock(
+                  (conv_dw): Conv2d(512, 512, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=512)
+                  (norm): LayerNorm((512,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=512, out_features=2048, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=2048, out_features=512, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.091)
+                )
+              )
+            )
+            (3): ConvNeXtStage(
+              (downsample): Sequential(
+                (0): LayerNorm2d((512,), eps=1e-06, elementwise_affine=True)
+                (1): Conv2d(512, 1024, kernel_size=(2, 2), stride=(2, 2))
+              )
+              (blocks): Sequential(
+                (0): ConvNeXtBlock(
+                  (conv_dw): Conv2d(1024, 1024, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1024)
+                  (norm): LayerNorm((1024,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=1024, out_features=4096, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=4096, out_features=1024, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.094)
+                )
+                (1): ConvNeXtBlock(
+                  (conv_dw): Conv2d(1024, 1024, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1024)
+                  (norm): LayerNorm((1024,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=1024, out_features=4096, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=4096, out_features=1024, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.097)
+                )
+                (2): ConvNeXtBlock(
+                  (conv_dw): Conv2d(1024, 1024, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=1024)
+                  (norm): LayerNorm((1024,), eps=1e-06, elementwise_affine=True)
+                  (mlp): Mlp(
+                    (fc1): Linear(in_features=1024, out_features=4096, bias=True)
+                    (act): GELU()
+                    (drop1): Dropout(p=0.0, inplace=False)
+                    (norm): Identity()
+                    (fc2): Linear(in_features=4096, out_features=1024, bias=True)
+                    (drop2): Dropout(p=0.0, inplace=False)
+                  )
+                  (shortcut): Identity()
+                  (drop_path): DropPath(drop_prob=0.100)
+                )
+              )
+            )
+          )
+          (norm_pre): Identity()
+          (head): NormMlpClassifierHead(
+            (global_pool): SelectAdaptivePool2d(pool_type=avg, flatten=Identity())
+            (norm): LayerNorm2d((1024,), eps=1e-06, elementwise_affine=True)
+            (flatten): Flatten(start_dim=1, end_dim=-1)
+            (pre_logits): Identity()
+            (drop): Dropout(p=0.0, inplace=False)
+            (fc): Identity()
+          )
+        )
+        (head): Sequential(
+          (drop): Dropout(p=0.0, inplace=False)
+          (proj): Linear(in_features=1024, out_features=640, bias=False)
+        )
+      )
+      (transformer): Transformer(
+        (resblocks): ModuleList(
+          (0-11): 12 x ResidualAttentionBlock(
+            (ln_1): LayerNorm((640,), eps=1e-05, elementwise_affine=True)
+            (attn): MultiheadAttention(
+              (out_proj): NonDynamicallyQuantizableLinear(in_features=640, out_features=640, bias=True)
+            )
+            (ls_1): Identity()
+            (ln_2): LayerNorm((640,), eps=1e-05, elementwise_affine=True)
+            (mlp): Sequential(
+              (c_fc): Linear(in_features=640, out_features=2560, bias=True)
+              (gelu): GELU(approximate='none')
+              (c_proj): Linear(in_features=2560, out_features=640, bias=True)
+            )
+            (ls_2): Identity()
+          )
+        )
+      )
+      (token_embedding): Embedding(49408, 640)
+      (ln_final): LayerNorm((640,), eps=1e-05, elementwise_affine=True)
+    )
+  )
+  (sem_seg_head): FCCLIPHead(
+    (pixel_decoder): MSDeformAttnPixelDecoder(
+      (input_proj): ModuleList(
+        (0): Sequential(
+          (0): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1))
+          (1): GroupNorm(32, 256, eps=1e-05, affine=True)
+        )
+        (1): Sequential(
+          (0): Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1))
+          (1): GroupNorm(32, 256, eps=1e-05, affine=True)
+        )
+        (2): Sequential(
+          (0): Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1))
+          (1): GroupNorm(32, 256, eps=1e-05, affine=True)
+        )
+      )
+      (transformer): MSDeformAttnTransformerEncoderOnly(
+        (encoder): MSDeformAttnTransformerEncoder(
+          (layers): ModuleList(
+            (0-5): 6 x MSDeformAttnTransformerEncoderLayer(
+              (self_attn): MSDeformAttn(
+                (sampling_offsets): Linear(in_features=256, out_features=192, bias=True)
+                (attention_weights): Linear(in_features=256, out_features=96, bias=True)
+                (value_proj): Linear(in_features=256, out_features=256, bias=True)
+                (output_proj): Linear(in_features=256, out_features=256, bias=True)
+              )
+              (dropout1): Dropout(p=0.0, inplace=False)
+              (norm1): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+              (linear1): Linear(in_features=256, out_features=1024, bias=True)
+              (dropout2): Dropout(p=0.0, inplace=False)
+              (linear2): Linear(in_features=1024, out_features=256, bias=True)
+              (dropout3): Dropout(p=0.0, inplace=False)
+              (norm2): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+            )
+          )
+        )
+      )
+      (pe_layer): Positional encoding PositionEmbeddingSine
+          num_pos_feats: 128
+          temperature: 10000
+          normalize: True
+          scale: 6.283185307179586
+      (mask_features): Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1))
+      (adapter_1): Conv2d(
+        128, 256, kernel_size=(1, 1), stride=(1, 1), bias=False
+        (norm): GroupNorm(32, 256, eps=1e-05, affine=True)
+      )
+      (layer_1): Conv2d(
+        256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False
+        (norm): GroupNorm(32, 256, eps=1e-05, affine=True)
+      )
+    )
+    (predictor): MultiScaleMaskedTransformerDecoder(
+      (pe_layer): Positional encoding PositionEmbeddingSine
+          num_pos_feats: 128
+          temperature: 10000
+          normalize: True
+          scale: 6.283185307179586
+      (transformer_self_attention_layers): ModuleList(
+        (0-8): 9 x SelfAttentionLayer(
+          (self_attn): MultiheadAttention(
+            (out_proj): NonDynamicallyQuantizableLinear(in_features=256, out_features=256, bias=True)
+          )
+          (norm): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (dropout): Dropout(p=0.0, inplace=False)
+        )
+      )
+      (transformer_cross_attention_layers): ModuleList(
+        (0-8): 9 x CrossAttentionLayer(
+          (multihead_attn): MultiheadAttention(
+            (out_proj): NonDynamicallyQuantizableLinear(in_features=256, out_features=256, bias=True)
+          )
+          (norm): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (dropout): Dropout(p=0.0, inplace=False)
+        )
+      )
+      (transformer_ffn_layers): ModuleList(
+        (0-8): 9 x FFNLayer(
+          (linear1): Linear(in_features=256, out_features=2048, bias=True)
+          (dropout): Dropout(p=0.0, inplace=False)
+          (linear2): Linear(in_features=2048, out_features=256, bias=True)
+          (norm): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+        )
+      )
+      (decoder_norm): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+      (query_feat): Embedding(100, 256)
+      (query_embed): Embedding(100, 256)
+      (level_embed): Embedding(3, 256)
+      (input_proj): ModuleList(
+        (0-2): 3 x Sequential()
+      )
+      (mask_embed): MLP(
+        (layers): ModuleList(
+          (0-2): 3 x Linear(in_features=256, out_features=256, bias=True)
+        )
+      )
+      (mask_pooling): MaskPooling()
+      (_mask_pooling_proj): Sequential(
+        (0): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+        (1): Linear(in_features=256, out_features=256, bias=True)
+      )
+      (class_embed): MLP(
+        (layers): ModuleList(
+          (0-1): 2 x Linear(in_features=256, out_features=256, bias=True)
+          (2): Linear(in_features=256, out_features=640, bias=True)
+        )
+      )
+    )
+  )
+  (mask_adapter): MASKAdapterHead(
+    (fuse): Conv2d(640, 768, kernel_size=(1, 1), stride=(1, 1))
+    (cnext1): ConvNextBlock(
+      (dwconv): Conv2d(768, 768, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=768)
+      (norm): LayerNorm()
+      (pwconv1): Linear(in_features=768, out_features=3072, bias=True)
+      (act): GELU(approximate='none')
+      (pwconv2): Linear(in_features=3072, out_features=768, bias=True)
+      (drop_path): Identity()
+    )
+    (cnext2): ConvNextBlock(
+      (dwconv): Conv2d(768, 768, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=768)
+      (norm): LayerNorm()
+      (pwconv1): Linear(in_features=768, out_features=3072, bias=True)
+      (act): GELU(approximate='none')
+      (pwconv2): Linear(in_features=3072, out_features=768, bias=True)
+      (drop_path): Identity()
+    )
+    (cnext3): ConvNextBlock(
+      (dwconv): Conv2d(768, 768, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3), groups=768)
+      (norm): LayerNorm()
+      (pwconv1): Linear(in_features=768, out_features=3072, bias=True)
+      (act): GELU(approximate='none')
+      (pwconv2): Linear(in_features=3072, out_features=768, bias=True)
+      (drop_path): Identity()
+    )
+    (norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+    (final): Conv2d(768, 16, kernel_size=(1, 1), stride=(1, 1))
+    (mask_downscaling): Sequential(
+      (0): Conv2d(1, 4, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+      (1): LayerNorm2d()
+      (2): GELU(approximate='none')
+      (3): Conv2d(4, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+      (4): LayerNorm2d()
+      (5): GELU(approximate='none')
+      (6): Conv2d(16, 640, kernel_size=(1, 1), stride=(1, 1))
+    )
+  )
+  (mask_pooling): MaskPooling()
+  (void_embedding): Embedding(1, 640)
+  (cdt): ContentDependentTransfer(
+    (pe_layer): Positional encoding PositionEmbeddingSine
+        num_pos_feats: 320
+        temperature: 10000
+        normalize: True
+        scale: 6.283185307179586
+    (cross_atten): ShortCut_CrossAttention(
+      (multihead_attn): MultiheadAttention(
+        (out_proj): NonDynamicallyQuantizableLinear(in_features=640, out_features=640, bias=True)
+      )
+      (norm): LayerNorm((640,), eps=1e-05, elementwise_affine=True)
+      (MLP): Linear(in_features=640, out_features=640, bias=True)
+    )
+  )
+  (ma_loss): MA_Loss(
+    (sl1): SmoothL1Loss()
+  )
+  (rc_loss): Representation_Compensation(
+    (sl1): SmoothL1Loss()
+  )
+)
+[06/30 23:50:18] d2.checkpoint.detection_checkpoint INFO: [DetectionCheckpointer] Loading from checkpoint/maftp_convnext_base_maskadapter.pth ...
+[06/30 23:50:18] fvcore.common.checkpoint INFO: [Checkpointer] Loading from checkpoint/maftp_convnext_base_maskadapter.pth ...
+[06/30 23:50:19] d2.data.dataset_mapper INFO: [DatasetMapper] Augmentations used in inference: [ResizeShortestEdge(short_edge_length=(896, 896), max_size=896, sample_style='choice')]
+[06/30 23:50:19] d2.data.common INFO: Serializing the dataset using: <class 'detectron2.data.common._TorchSerializedList'>
+[06/30 23:50:19] d2.data.common INFO: Serializing 2000 elements to byte tensors and concatenating them all ...
+[06/30 23:50:19] d2.data.common INFO: Serialized dataset takes 15.36 MiB
+[06/30 23:50:19] d2.evaluation.evaluator INFO: Start inference on 2000 batches
+[06/30 23:50:25] d2.evaluation.evaluator INFO: Inference done 1/2000. Dataloading: 0.3408 s/iter. Inference: 5.4691 s/iter. Eval: 0.0259 s/iter. Total: 5.8382 s/iter. ETA=3:14:30
+[06/30 23:50:30] d2.evaluation.evaluator INFO: Inference done 20/2000. Dataloading: 0.0017 s/iter. Inference: 0.2611 s/iter. Eval: 0.0097 s/iter. Total: 0.2725 s/iter. ETA=0:08:59
+[06/30 23:50:35] d2.evaluation.evaluator INFO: Inference done 37/2000. Dataloading: 0.0020 s/iter. Inference: 0.2746 s/iter. Eval: 0.0097 s/iter. Total: 0.2864 s/iter. ETA=0:09:22
+[06/30 23:50:40] d2.evaluation.evaluator INFO: Inference done 56/2000. Dataloading: 0.0021 s/iter. Inference: 0.2707 s/iter. Eval: 0.0101 s/iter. Total: 0.2829 s/iter. ETA=0:09:10
+[06/30 23:50:46] d2.evaluation.evaluator INFO: Inference done 75/2000. Dataloading: 0.0021 s/iter. Inference: 0.2691 s/iter. Eval: 0.0095 s/iter. Total: 0.2808 s/iter. ETA=0:09:00
+[06/30 23:50:51] d2.evaluation.evaluator INFO: Inference done 92/2000. Dataloading: 0.0021 s/iter. Inference: 0.2717 s/iter. Eval: 0.0096 s/iter. Total: 0.2835 s/iter. ETA=0:09:00
+[06/30 23:50:56] d2.evaluation.evaluator INFO: Inference done 111/2000. Dataloading: 0.0021 s/iter. Inference: 0.2697 s/iter. Eval: 0.0102 s/iter. Total: 0.2821 s/iter. ETA=0:08:52
+[06/30 23:51:01] d2.evaluation.evaluator INFO: Inference done 128/2000. Dataloading: 0.0021 s/iter. Inference: 0.2716 s/iter. Eval: 0.0105 s/iter. Total: 0.2842 s/iter. ETA=0:08:52
+[06/30 23:51:06] d2.evaluation.evaluator INFO: Inference done 146/2000. Dataloading: 0.0021 s/iter. Inference: 0.2716 s/iter. Eval: 0.0109 s/iter. Total: 0.2847 s/iter. ETA=0:08:47
+[06/30 23:51:11] d2.evaluation.evaluator INFO: Inference done 165/2000. Dataloading: 0.0021 s/iter. Inference: 0.2703 s/iter. Eval: 0.0111 s/iter. Total: 0.2836 s/iter. ETA=0:08:40
+[06/30 23:51:16] d2.evaluation.evaluator INFO: Inference done 183/2000. Dataloading: 0.0021 s/iter. Inference: 0.2707 s/iter. Eval: 0.0114 s/iter. Total: 0.2842 s/iter. ETA=0:08:36
+[06/30 23:51:22] d2.evaluation.evaluator INFO: Inference done 201/2000. Dataloading: 0.0021 s/iter. Inference: 0.2707 s/iter. Eval: 0.0112 s/iter. Total: 0.2841 s/iter. ETA=0:08:31
+[06/30 23:51:27] d2.evaluation.evaluator INFO: Inference done 217/2000. Dataloading: 0.0021 s/iter. Inference: 0.2735 s/iter. Eval: 0.0109 s/iter. Total: 0.2865 s/iter. ETA=0:08:30
+[06/30 23:51:32] d2.evaluation.evaluator INFO: Inference done 235/2000. Dataloading: 0.0021 s/iter. Inference: 0.2735 s/iter. Eval: 0.0107 s/iter. Total: 0.2864 s/iter. ETA=0:08:25
+[06/30 23:51:37] d2.evaluation.evaluator INFO: Inference done 253/2000. Dataloading: 0.0021 s/iter. Inference: 0.2730 s/iter. Eval: 0.0107 s/iter. Total: 0.2858 s/iter. ETA=0:08:19
+[06/30 23:51:42] d2.evaluation.evaluator INFO: Inference done 270/2000. Dataloading: 0.0021 s/iter. Inference: 0.2744 s/iter. Eval: 0.0107 s/iter. Total: 0.2872 s/iter. ETA=0:08:16
+[06/30 23:51:47] d2.evaluation.evaluator INFO: Inference done 288/2000. Dataloading: 0.0021 s/iter. Inference: 0.2744 s/iter. Eval: 0.0107 s/iter. Total: 0.2874 s/iter. ETA=0:08:11
+[06/30 23:51:52] d2.evaluation.evaluator INFO: Inference done 306/2000. Dataloading: 0.0021 s/iter. Inference: 0.2742 s/iter. Eval: 0.0109 s/iter. Total: 0.2872 s/iter. ETA=0:08:06
+[06/30 23:51:57] d2.evaluation.evaluator INFO: Inference done 323/2000. Dataloading: 0.0021 s/iter. Inference: 0.2748 s/iter. Eval: 0.0110 s/iter. Total: 0.2880 s/iter. ETA=0:08:02
+[06/30 23:52:03] d2.evaluation.evaluator INFO: Inference done 342/2000. Dataloading: 0.0021 s/iter. Inference: 0.2740 s/iter. Eval: 0.0110 s/iter. Total: 0.2872 s/iter. ETA=0:07:56
+[06/30 23:52:08] d2.evaluation.evaluator INFO: Inference done 359/2000. Dataloading: 0.0021 s/iter. Inference: 0.2746 s/iter. Eval: 0.0109 s/iter. Total: 0.2877 s/iter. ETA=0:07:52
+[06/30 23:52:13] d2.evaluation.evaluator INFO: Inference done 376/2000. Dataloading: 0.0021 s/iter. Inference: 0.2753 s/iter. Eval: 0.0108 s/iter. Total: 0.2884 s/iter. ETA=0:07:48
+[06/30 23:52:18] d2.evaluation.evaluator INFO: Inference done 395/2000. Dataloading: 0.0021 s/iter. Inference: 0.2744 s/iter. Eval: 0.0108 s/iter. Total: 0.2874 s/iter. ETA=0:07:41
+[06/30 23:52:23] d2.evaluation.evaluator INFO: Inference done 411/2000. Dataloading: 0.0021 s/iter. Inference: 0.2757 s/iter. Eval: 0.0107 s/iter. Total: 0.2886 s/iter. ETA=0:07:38
+[06/30 23:52:28] d2.evaluation.evaluator INFO: Inference done 427/2000. Dataloading: 0.0021 s/iter. Inference: 0.2768 s/iter. Eval: 0.0107 s/iter. Total: 0.2897 s/iter. ETA=0:07:35
+[06/30 23:52:33] d2.evaluation.evaluator INFO: Inference done 445/2000. Dataloading: 0.0022 s/iter. Inference: 0.2765 s/iter. Eval: 0.0107 s/iter. Total: 0.2893 s/iter. ETA=0:07:29
+[06/30 23:52:38] d2.evaluation.evaluator INFO: Inference done 463/2000. Dataloading: 0.0022 s/iter. Inference: 0.2764 s/iter. Eval: 0.0107 s/iter. Total: 0.2893 s/iter. ETA=0:07:24
+[06/30 23:52:43] d2.evaluation.evaluator INFO: Inference done 481/2000. Dataloading: 0.0022 s/iter. Inference: 0.2759 s/iter. Eval: 0.0109 s/iter. Total: 0.2890 s/iter. ETA=0:07:18
+[06/30 23:52:48] d2.evaluation.evaluator INFO: Inference done 497/2000. Dataloading: 0.0022 s/iter. Inference: 0.2768 s/iter. Eval: 0.0108 s/iter. Total: 0.2898 s/iter. ETA=0:07:15
+[06/30 23:52:53] d2.evaluation.evaluator INFO: Inference done 515/2000. Dataloading: 0.0022 s/iter. Inference: 0.2763 s/iter. Eval: 0.0109 s/iter. Total: 0.2895 s/iter. ETA=0:07:09
+[06/30 23:52:59] d2.evaluation.evaluator INFO: Inference done 533/2000. Dataloading: 0.0022 s/iter. Inference: 0.2759 s/iter. Eval: 0.0111 s/iter. Total: 0.2893 s/iter. ETA=0:07:04
+[06/30 23:53:04] d2.evaluation.evaluator INFO: Inference done 551/2000. Dataloading: 0.0022 s/iter. Inference: 0.2756 s/iter. Eval: 0.0111 s/iter. Total: 0.2889 s/iter. ETA=0:06:58
+[06/30 23:53:09] d2.evaluation.evaluator INFO: Inference done 568/2000. Dataloading: 0.0022 s/iter. Inference: 0.2761 s/iter. Eval: 0.0110 s/iter. Total: 0.2894 s/iter. ETA=0:06:54
+[06/30 23:53:14] d2.evaluation.evaluator INFO: Inference done 586/2000. Dataloading: 0.0022 s/iter. Inference: 0.2759 s/iter. Eval: 0.0111 s/iter. Total: 0.2892 s/iter. ETA=0:06:48
+[06/30 23:53:19] d2.evaluation.evaluator INFO: Inference done 605/2000. Dataloading: 0.0022 s/iter. Inference: 0.2756 s/iter. Eval: 0.0111 s/iter. Total: 0.2890 s/iter. ETA=0:06:43
+[06/30 23:53:25] d2.evaluation.evaluator INFO: Inference done 623/2000. Dataloading: 0.0022 s/iter. Inference: 0.2758 s/iter. Eval: 0.0110 s/iter. Total: 0.2891 s/iter. ETA=0:06:38
+[06/30 23:53:30] d2.evaluation.evaluator INFO: Inference done 641/2000. Dataloading: 0.0022 s/iter. Inference: 0.2756 s/iter. Eval: 0.0110 s/iter. Total: 0.2888 s/iter. ETA=0:06:32
+[06/30 23:53:35] d2.evaluation.evaluator INFO: Inference done 660/2000. Dataloading: 0.0022 s/iter. Inference: 0.2753 s/iter. Eval: 0.0109 s/iter. Total: 0.2884 s/iter. ETA=0:06:26
+[06/30 23:53:40] d2.evaluation.evaluator INFO: Inference done 678/2000. Dataloading: 0.0022 s/iter. Inference: 0.2751 s/iter. Eval: 0.0109 s/iter. Total: 0.2882 s/iter. ETA=0:06:21
+[06/30 23:53:45] d2.evaluation.evaluator INFO: Inference done 696/2000. Dataloading: 0.0022 s/iter. Inference: 0.2750 s/iter. Eval: 0.0109 s/iter. Total: 0.2881 s/iter. ETA=0:06:15
+[06/30 23:53:50] d2.evaluation.evaluator INFO: Inference done 715/2000. Dataloading: 0.0022 s/iter. Inference: 0.2747 s/iter. Eval: 0.0109 s/iter. Total: 0.2878 s/iter. ETA=0:06:09
+[06/30 23:53:55] d2.evaluation.evaluator INFO: Inference done 733/2000. Dataloading: 0.0022 s/iter. Inference: 0.2747 s/iter. Eval: 0.0108 s/iter. Total: 0.2878 s/iter. ETA=0:06:04
+[06/30 23:54:01] d2.evaluation.evaluator INFO: Inference done 752/2000. Dataloading: 0.0022 s/iter. Inference: 0.2745 s/iter. Eval: 0.0108 s/iter. Total: 0.2875 s/iter. ETA=0:05:58
+[06/30 23:54:06] d2.evaluation.evaluator INFO: Inference done 768/2000. Dataloading: 0.0022 s/iter. Inference: 0.2753 s/iter. Eval: 0.0107 s/iter. Total: 0.2882 s/iter. ETA=0:05:55
+[06/30 23:54:11] d2.evaluation.evaluator INFO: Inference done 786/2000. Dataloading: 0.0022 s/iter. Inference: 0.2751 s/iter. Eval: 0.0107 s/iter. Total: 0.2881 s/iter. ETA=0:05:49
+[06/30 23:54:16] d2.evaluation.evaluator INFO: Inference done 804/2000. Dataloading: 0.0022 s/iter. Inference: 0.2750 s/iter. Eval: 0.0108 s/iter. Total: 0.2881 s/iter. ETA=0:05:44
+[06/30 23:54:21] d2.evaluation.evaluator INFO: Inference done 822/2000. Dataloading: 0.0022 s/iter. Inference: 0.2748 s/iter. Eval: 0.0109 s/iter. Total: 0.2880 s/iter. ETA=0:05:39
+[06/30 23:54:26] d2.evaluation.evaluator INFO: Inference done 840/2000. Dataloading: 0.0022 s/iter. Inference: 0.2746 s/iter. Eval: 0.0110 s/iter. Total: 0.2879 s/iter. ETA=0:05:33
+[06/30 23:54:31] d2.evaluation.evaluator INFO: Inference done 858/2000. Dataloading: 0.0022 s/iter. Inference: 0.2746 s/iter. Eval: 0.0111 s/iter. Total: 0.2880 s/iter. ETA=0:05:28
+[06/30 23:54:37] d2.evaluation.evaluator INFO: Inference done 874/2000. Dataloading: 0.0022 s/iter. Inference: 0.2753 s/iter. Eval: 0.0110 s/iter. Total: 0.2885 s/iter. ETA=0:05:24
+[06/30 23:54:42] d2.evaluation.evaluator INFO: Inference done 892/2000. Dataloading: 0.0022 s/iter. Inference: 0.2752 s/iter. Eval: 0.0110 s/iter. Total: 0.2884 s/iter. ETA=0:05:19
+[06/30 23:54:47] d2.evaluation.evaluator INFO: Inference done 909/2000. Dataloading: 0.0022 s/iter. Inference: 0.2754 s/iter. Eval: 0.0109 s/iter. Total: 0.2885 s/iter. ETA=0:05:14
+[06/30 23:54:52] d2.evaluation.evaluator INFO: Inference done 927/2000. Dataloading: 0.0022 s/iter. Inference: 0.2753 s/iter. Eval: 0.0109 s/iter. Total: 0.2884 s/iter. ETA=0:05:09
+[06/30 23:54:57] d2.evaluation.evaluator INFO: Inference done 945/2000. Dataloading: 0.0022 s/iter. Inference: 0.2754 s/iter. Eval: 0.0109 s/iter. Total: 0.2885 s/iter. ETA=0:05:04
+[06/30 23:55:02] d2.evaluation.evaluator INFO: Inference done 963/2000. Dataloading: 0.0022 s/iter. Inference: 0.2754 s/iter. Eval: 0.0109 s/iter. Total: 0.2885 s/iter. ETA=0:04:59
+[06/30 23:55:07] d2.evaluation.evaluator INFO: Inference done 980/2000. Dataloading: 0.0022 s/iter. Inference: 0.2756 s/iter. Eval: 0.0109 s/iter. Total: 0.2888 s/iter. ETA=0:04:54
+[06/30 23:55:13] d2.evaluation.evaluator INFO: Inference done 998/2000. Dataloading: 0.0022 s/iter. Inference: 0.2757 s/iter. Eval: 0.0108 s/iter. Total: 0.2888 s/iter. ETA=0:04:49
+[06/30 23:55:18] d2.evaluation.evaluator INFO: Inference done 1016/2000. Dataloading: 0.0022 s/iter. Inference: 0.2757 s/iter. Eval: 0.0108 s/iter. Total: 0.2888 s/iter. ETA=0:04:44
+[06/30 23:55:23] d2.evaluation.evaluator INFO: Inference done 1034/2000. Dataloading: 0.0022 s/iter. Inference: 0.2755 s/iter. Eval: 0.0109 s/iter. Total: 0.2887 s/iter. ETA=0:04:38
+[06/30 23:55:28] d2.evaluation.evaluator INFO: Inference done 1052/2000. Dataloading: 0.0022 s/iter. Inference: 0.2755 s/iter. Eval: 0.0109 s/iter. Total: 0.2887 s/iter. ETA=0:04:33
+[06/30 23:55:33] d2.evaluation.evaluator INFO: Inference done 1070/2000. Dataloading: 0.0022 s/iter. Inference: 0.2755 s/iter. Eval: 0.0108 s/iter. Total: 0.2886 s/iter. ETA=0:04:28
+[06/30 23:55:38] d2.evaluation.evaluator INFO: Inference done 1088/2000. Dataloading: 0.0022 s/iter. Inference: 0.2755 s/iter. Eval: 0.0109 s/iter. Total: 0.2886 s/iter. ETA=0:04:23
+[06/30 23:55:43] d2.evaluation.evaluator INFO: Inference done 1104/2000. Dataloading: 0.0022 s/iter. Inference: 0.2758 s/iter. Eval: 0.0109 s/iter. Total: 0.2889 s/iter. ETA=0:04:18
+[06/30 23:55:48] d2.evaluation.evaluator INFO: Inference done 1121/2000. Dataloading: 0.0022 s/iter. Inference: 0.2759 s/iter. Eval: 0.0109 s/iter. Total: 0.2891 s/iter. ETA=0:04:14
+[06/30 23:55:54] d2.evaluation.evaluator INFO: Inference done 1139/2000. Dataloading: 0.0022 s/iter. Inference: 0.2760 s/iter. Eval: 0.0109 s/iter. Total: 0.2891 s/iter. ETA=0:04:08
+[06/30 23:55:59] d2.evaluation.evaluator INFO: Inference done 1157/2000. Dataloading: 0.0022 s/iter. Inference: 0.2759 s/iter. Eval: 0.0110 s/iter. Total: 0.2892 s/iter. ETA=0:04:03
+[06/30 23:56:04] d2.evaluation.evaluator INFO: Inference done 1175/2000. Dataloading: 0.0022 s/iter. Inference: 0.2759 s/iter. Eval: 0.0110 s/iter. Total: 0.2891 s/iter. ETA=0:03:58
+[06/30 23:56:09] d2.evaluation.evaluator INFO: Inference done 1193/2000. Dataloading: 0.0022 s/iter. Inference: 0.2758 s/iter. Eval: 0.0110 s/iter. Total: 0.2890 s/iter. ETA=0:03:53
+[06/30 23:56:14] d2.evaluation.evaluator INFO: Inference done 1210/2000. Dataloading: 0.0022 s/iter. Inference: 0.2761 s/iter. Eval: 0.0109 s/iter. Total: 0.2893 s/iter. ETA=0:03:48
+[06/30 23:56:20] d2.evaluation.evaluator INFO: Inference done 1228/2000. Dataloading: 0.0022 s/iter. Inference: 0.2761 s/iter. Eval: 0.0109 s/iter. Total: 0.2893 s/iter. ETA=0:03:43
+[06/30 23:56:25] d2.evaluation.evaluator INFO: Inference done 1246/2000. Dataloading: 0.0022 s/iter. Inference: 0.2761 s/iter. Eval: 0.0109 s/iter. Total: 0.2893 s/iter. ETA=0:03:38
+[06/30 23:56:30] d2.evaluation.evaluator INFO: Inference done 1263/2000. Dataloading: 0.0022 s/iter. Inference: 0.2763 s/iter. Eval: 0.0109 s/iter. Total: 0.2894 s/iter. ETA=0:03:33
+[06/30 23:56:35] d2.evaluation.evaluator INFO: Inference done 1279/2000. Dataloading: 0.0022 s/iter. Inference: 0.2766 s/iter. Eval: 0.0109 s/iter. Total: 0.2898 s/iter. ETA=0:03:28
+[06/30 23:56:40] d2.evaluation.evaluator INFO: Inference done 1296/2000. Dataloading: 0.0022 s/iter. Inference: 0.2768 s/iter. Eval: 0.0108 s/iter. Total: 0.2899 s/iter. ETA=0:03:24
+[06/30 23:56:45] d2.evaluation.evaluator INFO: Inference done 1314/2000. Dataloading: 0.0022 s/iter. Inference: 0.2769 s/iter. Eval: 0.0108 s/iter. Total: 0.2900 s/iter. ETA=0:03:18
+[06/30 23:56:51] d2.evaluation.evaluator INFO: Inference done 1331/2000. Dataloading: 0.0022 s/iter. Inference: 0.2770 s/iter. Eval: 0.0108 s/iter. Total: 0.2901 s/iter. ETA=0:03:14
+[06/30 23:56:56] d2.evaluation.evaluator INFO: Inference done 1349/2000. Dataloading: 0.0022 s/iter. Inference: 0.2769 s/iter. Eval: 0.0108 s/iter. Total: 0.2900 s/iter. ETA=0:03:08
+[06/30 23:57:01] d2.evaluation.evaluator INFO: Inference done 1365/2000. Dataloading: 0.0022 s/iter. Inference: 0.2773 s/iter. Eval: 0.0108 s/iter. Total: 0.2904 s/iter. ETA=0:03:04
+[06/30 23:57:06] d2.evaluation.evaluator INFO: Inference done 1383/2000. Dataloading: 0.0022 s/iter. Inference: 0.2772 s/iter. Eval: 0.0108 s/iter. Total: 0.2903 s/iter. ETA=0:02:59
+[06/30 23:57:11] d2.evaluation.evaluator INFO: Inference done 1402/2000. Dataloading: 0.0022 s/iter. Inference: 0.2770 s/iter. Eval: 0.0108 s/iter. Total: 0.2900 s/iter. ETA=0:02:53
+[06/30 23:57:16] d2.evaluation.evaluator INFO: Inference done 1417/2000. Dataloading: 0.0022 s/iter. Inference: 0.2775 s/iter. Eval: 0.0107 s/iter. Total: 0.2905 s/iter. ETA=0:02:49
+[06/30 23:57:21] d2.evaluation.evaluator INFO: Inference done 1435/2000. Dataloading: 0.0022 s/iter. Inference: 0.2774 s/iter. Eval: 0.0107 s/iter. Total: 0.2904 s/iter. ETA=0:02:44
+[06/30 23:57:26] d2.evaluation.evaluator INFO: Inference done 1453/2000. Dataloading: 0.0022 s/iter. Inference: 0.2774 s/iter. Eval: 0.0107 s/iter. Total: 0.2903 s/iter. ETA=0:02:38
+[06/30 23:57:32] d2.evaluation.evaluator INFO: Inference done 1471/2000. Dataloading: 0.0022 s/iter. Inference: 0.2773 s/iter. Eval: 0.0108 s/iter. Total: 0.2903 s/iter. ETA=0:02:33
+[06/30 23:57:37] d2.evaluation.evaluator INFO: Inference done 1488/2000. Dataloading: 0.0022 s/iter. Inference: 0.2774 s/iter. Eval: 0.0108 s/iter. Total: 0.2905 s/iter. ETA=0:02:28
+[06/30 23:57:42] d2.evaluation.evaluator INFO: Inference done 1505/2000. Dataloading: 0.0022 s/iter. Inference: 0.2775 s/iter. Eval: 0.0108 s/iter. Total: 0.2905 s/iter. ETA=0:02:23
+[06/30 23:57:47] d2.evaluation.evaluator INFO: Inference done 1523/2000. Dataloading: 0.0022 s/iter. Inference: 0.2773 s/iter. Eval: 0.0108 s/iter. Total: 0.2904 s/iter. ETA=0:02:18
+[06/30 23:57:52] d2.evaluation.evaluator INFO: Inference done 1541/2000. Dataloading: 0.0022 s/iter. Inference: 0.2773 s/iter. Eval: 0.0108 s/iter. Total: 0.2904 s/iter. ETA=0:02:13
+[06/30 23:57:57] d2.evaluation.evaluator INFO: Inference done 1558/2000. Dataloading: 0.0022 s/iter. Inference: 0.2775 s/iter. Eval: 0.0108 s/iter. Total: 0.2905 s/iter. ETA=0:02:08
+[06/30 23:58:02] d2.evaluation.evaluator INFO: Inference done 1576/2000. Dataloading: 0.0022 s/iter. Inference: 0.2774 s/iter. Eval: 0.0108 s/iter. Total: 0.2904 s/iter. ETA=0:02:03
+[06/30 23:58:07] d2.evaluation.evaluator INFO: Inference done 1593/2000. Dataloading: 0.0022 s/iter. Inference: 0.2775 s/iter. Eval: 0.0108 s/iter. Total: 0.2906 s/iter. ETA=0:01:58
+[06/30 23:58:12] d2.evaluation.evaluator INFO: Inference done 1610/2000. Dataloading: 0.0022 s/iter. Inference: 0.2776 s/iter. Eval: 0.0108 s/iter. Total: 0.2907 s/iter. ETA=0:01:53
+[06/30 23:58:18] d2.evaluation.evaluator INFO: Inference done 1627/2000. Dataloading: 0.0022 s/iter. Inference: 0.2777 s/iter. Eval: 0.0108 s/iter. Total: 0.2908 s/iter. ETA=0:01:48
+[06/30 23:58:23] d2.evaluation.evaluator INFO: Inference done 1645/2000. Dataloading: 0.0022 s/iter. Inference: 0.2776 s/iter. Eval: 0.0108 s/iter. Total: 0.2907 s/iter. ETA=0:01:43
+[06/30 23:58:28] d2.evaluation.evaluator INFO: Inference done 1662/2000. Dataloading: 0.0022 s/iter. Inference: 0.2777 s/iter. Eval: 0.0108 s/iter. Total: 0.2907 s/iter. ETA=0:01:38
+[06/30 23:58:33] d2.evaluation.evaluator INFO: Inference done 1681/2000. Dataloading: 0.0022 s/iter. Inference: 0.2776 s/iter. Eval: 0.0107 s/iter. Total: 0.2906 s/iter. ETA=0:01:32
+[06/30 23:58:38] d2.evaluation.evaluator INFO: Inference done 1700/2000. Dataloading: 0.0022 s/iter. Inference: 0.2775 s/iter. Eval: 0.0107 s/iter. Total: 0.2905 s/iter. ETA=0:01:27
+[06/30 23:58:43] d2.evaluation.evaluator INFO: Inference done 1718/2000. Dataloading: 0.0022 s/iter. Inference: 0.2775 s/iter. Eval: 0.0107 s/iter. Total: 0.2905 s/iter. ETA=0:01:21
+[06/30 23:58:48] d2.evaluation.evaluator INFO: Inference done 1735/2000. Dataloading: 0.0022 s/iter. Inference: 0.2775 s/iter. Eval: 0.0107 s/iter. Total: 0.2905 s/iter. ETA=0:01:16
+[06/30 23:58:53] d2.evaluation.evaluator INFO: Inference done 1753/2000. Dataloading: 0.0022 s/iter. Inference: 0.2774 s/iter. Eval: 0.0107 s/iter. Total: 0.2904 s/iter. ETA=0:01:11
+[06/30 23:58:59] d2.evaluation.evaluator INFO: Inference done 1770/2000. Dataloading: 0.0022 s/iter. Inference: 0.2777 s/iter. Eval: 0.0107 s/iter. Total: 0.2906 s/iter. ETA=0:01:06
+[06/30 23:59:04] d2.evaluation.evaluator INFO: Inference done 1788/2000. Dataloading: 0.0022 s/iter. Inference: 0.2776 s/iter. Eval: 0.0107 s/iter. Total: 0.2905 s/iter. ETA=0:01:01
+[06/30 23:59:09] d2.evaluation.evaluator INFO: Inference done 1806/2000. Dataloading: 0.0022 s/iter. Inference: 0.2775 s/iter. Eval: 0.0107 s/iter. Total: 0.2905 s/iter. ETA=0:00:56
+[06/30 23:59:14] d2.evaluation.evaluator INFO: Inference done 1824/2000. Dataloading: 0.0022 s/iter. Inference: 0.2774 s/iter. Eval: 0.0108 s/iter. Total: 0.2905 s/iter. ETA=0:00:51
+[06/30 23:59:19] d2.evaluation.evaluator INFO: Inference done 1842/2000. Dataloading: 0.0022 s/iter. Inference: 0.2774 s/iter. Eval: 0.0108 s/iter. Total: 0.2905 s/iter. ETA=0:00:45
+[06/30 23:59:25] d2.evaluation.evaluator INFO: Inference done 1860/2000. Dataloading: 0.0022 s/iter. Inference: 0.2774 s/iter. Eval: 0.0108 s/iter. Total: 0.2905 s/iter. ETA=0:00:40
+[06/30 23:59:30] d2.evaluation.evaluator INFO: Inference done 1876/2000. Dataloading: 0.0022 s/iter. Inference: 0.2777 s/iter. Eval: 0.0108 s/iter. Total: 0.2908 s/iter. ETA=0:00:36
+[06/30 23:59:35] d2.evaluation.evaluator INFO: Inference done 1894/2000. Dataloading: 0.0022 s/iter. Inference: 0.2777 s/iter. Eval: 0.0108 s/iter. Total: 0.2907 s/iter. ETA=0:00:30
+[06/30 23:59:40] d2.evaluation.evaluator INFO: Inference done 1912/2000. Dataloading: 0.0022 s/iter. Inference: 0.2777 s/iter. Eval: 0.0108 s/iter. Total: 0.2907 s/iter. ETA=0:00:25
+[06/30 23:59:45] d2.evaluation.evaluator INFO: Inference done 1930/2000. Dataloading: 0.0022 s/iter. Inference: 0.2777 s/iter. Eval: 0.0107 s/iter. Total: 0.2907 s/iter. ETA=0:00:20
+[06/30 23:59:51] d2.evaluation.evaluator INFO: Inference done 1948/2000. Dataloading: 0.0022 s/iter. Inference: 0.2776 s/iter. Eval: 0.0107 s/iter. Total: 0.2906 s/iter. ETA=0:00:15
+[06/30 23:59:56] d2.evaluation.evaluator INFO: Inference done 1965/2000. Dataloading: 0.0022 s/iter. Inference: 0.2777 s/iter. Eval: 0.0107 s/iter. Total: 0.2907 s/iter. ETA=0:00:10
+[07/01 00:00:01] d2.evaluation.evaluator INFO: Inference done 1982/2000. Dataloading: 0.0022 s/iter. Inference: 0.2777 s/iter. Eval: 0.0107 s/iter. Total: 0.2907 s/iter. ETA=0:00:05
+[07/01 00:00:06] d2.evaluation.evaluator INFO: Inference done 1999/2000. Dataloading: 0.0022 s/iter. Inference: 0.2778 s/iter. Eval: 0.0107 s/iter. Total: 0.2908 s/iter. ETA=0:00:00
+[07/01 00:00:06] d2.evaluation.evaluator INFO: Total inference time: 0:09:40.323915 (0.290889 s / iter per device, on 1 devices)
+[07/01 00:00:06] d2.evaluation.evaluator INFO: Total inference pure compute time: 0:09:14 (0.277825 s / iter per device, on 1 devices)
+[07/01 00:00:06] d2.evaluation.sem_seg_evaluation INFO: OrderedDict([('sem_seg', {'mIoU': np.float64(35.61544222122768), 'fwIoU': np.float64(61.321489386491756), 'IoU-wall,walls,brick wall,stone wall,interior wall': np.float64(71.53454907385539), 'BoundaryIoU-wall,walls,brick wall,stone wall,interior wall': np.float64(73.56131168553652), 'min(IoU, B-Iou)-wall,walls,brick wall,stone wall,interior wall': np.float64(71.53454907385539), 'IoU-building,buildings,edifice,edifices': np.float64(63.34984919818698), 'BoundaryIoU-building,buildings,edifice,edifices': np.float64(8.639178635940265), 'min(IoU, B-Iou)-building,buildings,edifice,edifices': np.float64(8.639178635940265), 'IoU-sky,clouds': np.float64(93.24387247538071), 'BoundaryIoU-sky,clouds': np.float64(0.0), 'min(IoU, B-Iou)-sky,clouds': np.float64(0.0), 'IoU-floor,flooring': np.float64(53.32890155354034), 'BoundaryIoU-floor,flooring': np.float64(0.0), 'min(IoU, B-Iou)-floor,flooring': np.float64(0.0), 'IoU-tree,trees': np.float64(71.43068128206059), 'BoundaryIoU-tree,trees': np.float64(0.0), 'min(IoU, B-Iou)-tree,trees': np.float64(0.0), 'IoU-ceiling': np.float64(80.40844633211634), 'BoundaryIoU-ceiling': np.float64(0.0), 'min(IoU, B-Iou)-ceiling': np.float64(0.0), 'IoU-road,route,street,roads,streets,routes': np.float64(78.50362677432081), 'BoundaryIoU-road,route,street,roads,streets,routes': np.float64(0.0), 'min(IoU, B-Iou)-road,route,street,roads,streets,routes': np.float64(0.0), 'IoU-bed,beds': np.float64(81.54614000919264), 'BoundaryIoU-bed,beds': np.float64(0.0), 'min(IoU, B-Iou)-bed,beds': np.float64(0.0), 'IoU-windowpane,window,windows': np.float64(48.67524941263003), 'BoundaryIoU-windowpane,window,windows': np.float64(0.0), 'min(IoU, B-Iou)-windowpane,window,windows': np.float64(0.0), 'IoU-grass,grass field': np.float64(61.54180133637297), 'BoundaryIoU-grass,grass field': np.float64(0.0), 'min(IoU, B-Iou)-grass,grass field': np.float64(0.0), 'IoU-cabinet,cabinets,wall mounted cabine': np.float64(56.60454233440879), 'BoundaryIoU-cabinet,cabinets,wall mounted cabine': np.float64(0.0), 'min(IoU, B-Iou)-cabinet,cabinets,wall mounted cabine': np.float64(0.0), 'IoU-sidewalk,pavement': np.float64(53.27907081314681), 'BoundaryIoU-sidewalk,pavement': np.float64(0.0), 'min(IoU, B-Iou)-sidewalk,pavement': np.float64(0.0), 'IoU-person,child,girl,boy,woman,man,people,children,girls,boys,women,men': np.float64(83.36983812781934), 'BoundaryIoU-person,child,girl,boy,woman,man,people,children,girls,boys,women,men': np.float64(0.0), 'min(IoU, B-Iou)-person,child,girl,boy,woman,man,people,children,girls,boys,women,men': np.float64(0.0), 'IoU-earth,ground': np.float64(2.0070547912505865), 'BoundaryIoU-earth,ground': np.float64(0.0), 'min(IoU, B-Iou)-earth,ground': np.float64(0.0), 'IoU-door,double door,doors': np.float64(37.58081935776178), 'BoundaryIoU-door,double door,doors': np.float64(0.0), 'min(IoU, B-Iou)-door,double door,doors': np.float64(0.0), 'IoU-table,tables,tablecloth': np.float64(48.079724972641074), 'BoundaryIoU-table,tables,tablecloth': np.float64(0.0), 'min(IoU, B-Iou)-table,tables,tablecloth': np.float64(0.0), 'IoU-mountain,mount,mountains': np.float64(42.09620325540322), 'BoundaryIoU-mountain,mount,mountains': np.float64(0.0), 'min(IoU, B-Iou)-mountain,mount,mountains': np.float64(0.0), 'IoU-plant,flora,plant life,plants,bushes': np.float64(49.41780588891446), 'BoundaryIoU-plant,flora,plant life,plants,bushes': np.float64(0.0), 'min(IoU, B-Iou)-plant,flora,plant life,plants,bushes': np.float64(0.0), 'IoU-curtain,drape,drapery,mantle,pall': np.float64(69.28774718795356), 'BoundaryIoU-curtain,drape,drapery,mantle,pall': np.float64(0.0), 'min(IoU, B-Iou)-curtain,drape,drapery,mantle,pall': np.float64(0.0), 'IoU-chair,chairs': np.float64(53.17523665859686), 'BoundaryIoU-chair,chairs': np.float64(0.0), 'min(IoU, B-Iou)-chair,chairs': np.float64(0.0), 'IoU-car,automobile,cars': np.float64(80.6974068637607), 'BoundaryIoU-car,automobile,cars': np.float64(0.0), 'min(IoU, B-Iou)-car,automobile,cars': np.float64(0.0), 'IoU-water': np.float64(4.660170408671602), 'BoundaryIoU-water': np.float64(0.0), 'min(IoU, B-Iou)-water': np.float64(0.0), 'IoU-painting,picture,paintings,pictures,wallart,framed canvas': np.float64(40.84518134616951), 'BoundaryIoU-painting,picture,paintings,pictures,wallart,framed canvas': np.float64(0.0), 'min(IoU, B-Iou)-painting,picture,paintings,pictures,wallart,framed canvas': np.float64(0.0), 'IoU-sofa,couch,sofas,couches': np.float64(65.70746676284097), 'BoundaryIoU-sofa,couch,sofas,couches': np.float64(0.0), 'min(IoU, B-Iou)-sofa,couch,sofas,couches': np.float64(0.0), 'IoU-shelf,shelves': np.float64(39.14421984833438), 'BoundaryIoU-shelf,shelves': np.float64(0.0), 'min(IoU, B-Iou)-shelf,shelves': np.float64(0.0), 'IoU-house exterior': np.float64(23.558430865851136), 'BoundaryIoU-house exterior': np.float64(0.0), 'min(IoU, B-Iou)-house exterior': np.float64(0.0), 'IoU-sea,ocean': np.float64(47.522135483695145), 'BoundaryIoU-sea,ocean': np.float64(0.0), 'min(IoU, B-Iou)-sea,ocean': np.float64(0.0), 'IoU-mirror,mirrors': np.float64(59.80657001755523), 'BoundaryIoU-mirror,mirrors': np.float64(0.0), 'min(IoU, B-Iou)-mirror,mirrors': np.float64(0.0), 'IoU-rug,carpet,carpeting': np.float64(19.748158301040647), 'BoundaryIoU-rug,carpet,carpeting': np.float64(0.0), 'min(IoU, B-Iou)-rug,carpet,carpeting': np.float64(0.0), 'IoU-field': np.float64(8.542974077784844), 'BoundaryIoU-field': np.float64(0.0), 'min(IoU, B-Iou)-field': np.float64(0.0), 'IoU-armchair,armchairs': np.float64(39.93641924159475), 'BoundaryIoU-armchair,armchairs': np.float64(0.0), 'min(IoU, B-Iou)-armchair,armchairs': np.float64(0.0), 'IoU-seat,seats': np.float64(50.05870519104666), 'BoundaryIoU-seat,seats': np.float64(0.0), 'min(IoU, B-Iou)-seat,seats': np.float64(0.0), 'IoU-fence,fencing': np.float64(36.299446449339385), 'BoundaryIoU-fence,fencing': np.float64(0.0), 'min(IoU, B-Iou)-fence,fencing': np.float64(0.0), 'IoU-desk,desks': np.float64(39.71670558545334), 'BoundaryIoU-desk,desks': np.float64(0.0), 'min(IoU, B-Iou)-desk,desks': np.float64(0.0), 'IoU-rock,stone,rocks,stones': np.float64(36.623638869885326), 'BoundaryIoU-rock,stone,rocks,stones': np.float64(0.0), 'min(IoU, B-Iou)-rock,stone,rocks,stones': np.float64(0.0), 'IoU-wardrobe,closet,press,wardrobes,closets': np.float64(12.553520365578194), 'BoundaryIoU-wardrobe,closet,press,wardrobes,closets': np.float64(0.0), 'min(IoU, B-Iou)-wardrobe,closet,press,wardrobes,closets': np.float64(0.0), 'IoU-lamp,lamps': np.float64(56.47167232387703), 'BoundaryIoU-lamp,lamps': np.float64(0.0), 'min(IoU, B-Iou)-lamp,lamps': np.float64(0.0), 'IoU-bathtub,bathing tub,bath,tub': np.float64(64.9196474186443), 'BoundaryIoU-bathtub,bathing tub,bath,tub': np.float64(0.0), 'min(IoU, B-Iou)-bathtub,bathing tub,bath,tub': np.float64(0.0), 'IoU-railing,rail': np.float64(30.55395147768606), 'BoundaryIoU-railing,rail': np.float64(0.0), 'min(IoU, B-Iou)-railing,rail': np.float64(0.0), 'IoU-cushion,cushions': np.float64(26.276762900081135), 'BoundaryIoU-cushion,cushions': np.float64(0.0), 'min(IoU, B-Iou)-cushion,cushions': np.float64(0.0), 'IoU-pedestal': np.float64(5.0424901717916955), 'BoundaryIoU-pedestal': np.float64(0.0), 'min(IoU, B-Iou)-pedestal': np.float64(0.0), 'IoU-box,boxes': np.float64(17.39356839792324), 'BoundaryIoU-box,boxes': np.float64(0.0), 'min(IoU, B-Iou)-box,boxes': np.float64(0.0), 'IoU-column,pillar': np.float64(32.34053182090104), 'BoundaryIoU-column,pillar': np.float64(0.0), 'min(IoU, B-Iou)-column,pillar': np.float64(0.0), 'IoU-signboard,sign,signboards,signs': np.float64(14.750391997566103), 'BoundaryIoU-signboard,sign,signboards,signs': np.float64(0.0), 'min(IoU, B-Iou)-signboard,sign,signboards,signs': np.float64(0.0), 'IoU-chest of drawers,chest,bureau,dresser': np.float64(28.40414810349537), 'BoundaryIoU-chest of drawers,chest,bureau,dresser': np.float64(0.0), 'min(IoU, B-Iou)-chest of drawers,chest,bureau,dresser': np.float64(0.0), 'IoU-counter': np.float64(16.29311713934922), 'BoundaryIoU-counter': np.float64(0.0), 'min(IoU, B-Iou)-counter': np.float64(0.0), 'IoU-sand': np.float64(60.28232770531668), 'BoundaryIoU-sand': np.float64(0.0), 'min(IoU, B-Iou)-sand': np.float64(0.0), 'IoU-sink': np.float64(66.16270286627922), 'BoundaryIoU-sink': np.float64(0.0), 'min(IoU, B-Iou)-sink': np.float64(0.0), 'IoU-skyscraper,skyscrapers': np.float64(25.533485802099342), 'BoundaryIoU-skyscraper,skyscrapers': np.float64(0.0), 'min(IoU, B-Iou)-skyscraper,skyscrapers': np.float64(0.0), 'IoU-fireplace,hearth,open fireplace': np.float64(48.349116099863366), 'BoundaryIoU-fireplace,hearth,open fireplace': np.float64(0.0), 'min(IoU, B-Iou)-fireplace,hearth,open fireplace': np.float64(0.0), 'IoU-refrigerator,icebox': np.float64(62.11602393082075), 'BoundaryIoU-refrigerator,icebox': np.float64(0.0), 'min(IoU, B-Iou)-refrigerator,icebox': np.float64(0.0), 'IoU-grandstand,covered stand': np.float64(31.35211909852523), 'BoundaryIoU-grandstand,covered stand': np.float64(0.0), 'min(IoU, B-Iou)-grandstand,covered stand': np.float64(0.0), 'IoU-path': np.float64(8.508103153080594), 'BoundaryIoU-path': np.float64(0.0), 'min(IoU, B-Iou)-path': np.float64(0.0), 'IoU-stairs,steps': np.float64(50.56949412218709), 'BoundaryIoU-stairs,steps': np.float64(0.0), 'min(IoU, B-Iou)-stairs,steps': np.float64(0.0), 'IoU-runway': np.float64(50.40334427766173), 'BoundaryIoU-runway': np.float64(0.0), 'min(IoU, B-Iou)-runway': np.float64(0.0), 'IoU-case,display case,showcase,vitrine': np.float64(32.03393200732211), 'BoundaryIoU-case,display case,showcase,vitrine': np.float64(0.0), 'min(IoU, B-Iou)-case,display case,showcase,vitrine': np.float64(0.0), 'IoU-pool table,billiard table,snooker table': np.float64(89.51846100297197), 'BoundaryIoU-pool table,billiard table,snooker table': np.float64(0.0), 'min(IoU, B-Iou)-pool table,billiard table,snooker table': np.float64(0.0), 'IoU-pillow,pillows': np.float64(0.6205255502962836), 'BoundaryIoU-pillow,pillows': np.float64(0.0), 'min(IoU, B-Iou)-pillow,pillows': np.float64(0.0), 'IoU-screen door,shower door': np.float64(30.40629413321386), 'BoundaryIoU-screen door,shower door': np.float64(0.0), 'min(IoU, B-Iou)-screen door,shower door': np.float64(0.0), 'IoU-stairway,staircase': np.float64(22.485540202138875), 'BoundaryIoU-stairway,staircase': np.float64(0.0), 'min(IoU, B-Iou)-stairway,staircase': np.float64(0.0), 'IoU-river': np.float64(7.3639445593952715), 'BoundaryIoU-river': np.float64(0.0), 'min(IoU, B-Iou)-river': np.float64(0.0), 'IoU-bridge,span': np.float64(62.26191793985271), 'BoundaryIoU-bridge,span': np.float64(0.0), 'min(IoU, B-Iou)-bridge,span': np.float64(0.0), 'IoU-bookcase': np.float64(7.605548961230042), 'BoundaryIoU-bookcase': np.float64(0.0), 'min(IoU, B-Iou)-bookcase': np.float64(0.0), 'IoU-window screen,door screen': np.float64(7.24708533192223), 'BoundaryIoU-window screen,door screen': np.float64(0.0), 'min(IoU, B-Iou)-window screen,door screen': np.float64(0.0), 'IoU-coffee table,cocktail table': np.float64(44.18195754793491), 'BoundaryIoU-coffee table,cocktail table': np.float64(0.0), 'min(IoU, B-Iou)-coffee table,cocktail table': np.float64(0.0), 'IoU-toilet,commode,crapper,potty': np.float64(85.63656890185104), 'BoundaryIoU-toilet,commode,crapper,potty': np.float64(0.0), 'min(IoU, B-Iou)-toilet,commode,crapper,potty': np.float64(0.0), 'IoU-flower,flowers': np.float64(32.60496332136725), 'BoundaryIoU-flower,flowers': np.float64(0.0), 'min(IoU, B-Iou)-flower,flowers': np.float64(0.0), 'IoU-book,books': np.float64(44.33401936463248), 'BoundaryIoU-book,books': np.float64(0.0), 'min(IoU, B-Iou)-book,books': np.float64(0.0), 'IoU-hill': np.float64(8.370240000878622), 'BoundaryIoU-hill': np.float64(0.0), 'min(IoU, B-Iou)-hill': np.float64(0.0), 'IoU-bench,benches': np.float64(42.04896537234626), 'BoundaryIoU-bench,benches': np.float64(0.0), 'min(IoU, B-Iou)-bench,benches': np.float64(0.0), 'IoU-countertop,counter top,worktop': np.float64(25.183187315942313), 'BoundaryIoU-countertop,counter top,worktop': np.float64(0.0), 'min(IoU, B-Iou)-countertop,counter top,worktop': np.float64(0.0), 'IoU-stove,kitchen stove,kitchen range,kitchen range,cooking stove': np.float64(35.64041614310732), 'BoundaryIoU-stove,kitchen stove,kitchen range,kitchen range,cooking stove': np.float64(0.0), 'min(IoU, B-Iou)-stove,kitchen stove,kitchen range,kitchen range,cooking stove': np.float64(0.0), 'IoU-palm tree,palm trees': np.float64(33.776773504333256), 'BoundaryIoU-palm tree,palm trees': np.float64(0.0), 'min(IoU, B-Iou)-palm tree,palm trees': np.float64(0.0), 'IoU-kitchen island': np.float64(31.2831740600801), 'BoundaryIoU-kitchen island': np.float64(0.0), 'min(IoU, B-Iou)-kitchen island': np.float64(0.0), 'IoU-computer,computing machine,computing device,data processor,electronic computer,information processing system': np.float64(25.077330261332193), 'BoundaryIoU-computer,computing machine,computing device,data processor,electronic computer,information processing system': np.float64(0.0), 'min(IoU, B-Iou)-computer,computing machine,computing device,data processor,electronic computer,information processing system': np.float64(0.0), 'IoU-swivel chair': np.float64(0.0), 'BoundaryIoU-swivel chair': np.float64(0.0), 'min(IoU, B-Iou)-swivel chair': np.float64(0.0), 'IoU-boat': np.float64(82.14924631439456), 'BoundaryIoU-boat': np.float64(0.0), 'min(IoU, B-Iou)-boat': np.float64(0.0), 'IoU-bar': np.float64(5.441082453649649), 'BoundaryIoU-bar': np.float64(0.0), 'min(IoU, B-Iou)-bar': np.float64(0.0), 'IoU-arcade machine,arcade machines': np.float64(20.588857674486484), 'BoundaryIoU-arcade machine,arcade machines': np.float64(0.0), 'min(IoU, B-Iou)-arcade machine,arcade machines': np.float64(0.0), 'IoU-hovel,hut,hutch,shack,shanty': np.float64(26.046030746470848), 'BoundaryIoU-hovel,hut,hutch,shack,shanty': np.float64(0.0), 'min(IoU, B-Iou)-hovel,hut,hutch,shack,shanty': np.float64(0.0), 'IoU-bus,autobus,double-decker,jitney,motorbus,motorcoach,omnibus,passenger vehicle': np.float64(64.0061930760407), 'BoundaryIoU-bus,autobus,double-decker,jitney,motorbus,motorcoach,omnibus,passenger vehicle': np.float64(0.0), 'min(IoU, B-Iou)-bus,autobus,double-decker,jitney,motorbus,motorcoach,omnibus,passenger vehicle': np.float64(0.0), 'IoU-towel': np.float64(53.06226258080137), 'BoundaryIoU-towel': np.float64(0.0), 'min(IoU, B-Iou)-towel': np.float64(0.0), 'IoU-light bulb,lightbulb,bulb,incandescent lamp,electric light,electric-light bulb': np.float64(31.302164313701102), 'BoundaryIoU-light bulb,lightbulb,bulb,incandescent lamp,electric light,electric-light bulb': np.float64(0.0), 'min(IoU, B-Iou)-light bulb,lightbulb,bulb,incandescent lamp,electric light,electric-light bulb': np.float64(0.0), 'IoU-truck,motortruck': np.float64(32.05322769625621), 'BoundaryIoU-truck,motortruck': np.float64(0.0), 'min(IoU, B-Iou)-truck,motortruck': np.float64(0.0), 'IoU-tower,towers': np.float64(29.914020129779367), 'BoundaryIoU-tower,towers': np.float64(0.0), 'min(IoU, B-Iou)-tower,towers': np.float64(0.0), 'IoU-chandelier,pendant,pendent': np.float64(54.45561373780615), 'BoundaryIoU-chandelier,pendant,pendent': np.float64(0.0), 'min(IoU, B-Iou)-chandelier,pendant,pendent': np.float64(0.0), 'IoU-awning,sunshade,sunblind': np.float64(7.608784899799822), 'BoundaryIoU-awning,sunshade,sunblind': np.float64(0.0), 'min(IoU, B-Iou)-awning,sunshade,sunblind': np.float64(0.0), 'IoU-streetlight,street lamp': np.float64(4.291620567169393), 'BoundaryIoU-streetlight,street lamp': np.float64(0.0), 'min(IoU, B-Iou)-streetlight,street lamp': np.float64(0.0), 'IoU-booth,cubicle,stall,kiosk': np.float64(16.857014144360818), 'BoundaryIoU-booth,cubicle,stall,kiosk': np.float64(0.0), 'min(IoU, B-Iou)-booth,cubicle,stall,kiosk': np.float64(0.0), 'IoU-television receiver,television,television set,tv,tv set': np.float64(55.071691756217255), 'BoundaryIoU-television receiver,television,television set,tv,tv set': np.float64(0.0), 'min(IoU, B-Iou)-television receiver,television,television set,tv,tv set': np.float64(0.0), 'IoU-airplane,aeroplane,airplanes,aeroplanes': np.float64(50.352286083878894), 'BoundaryIoU-airplane,aeroplane,airplanes,aeroplanes': np.float64(0.0), 'min(IoU, B-Iou)-airplane,aeroplane,airplanes,aeroplanes': np.float64(0.0), 'IoU-dirt track': np.float64(0.38386383392320694), 'BoundaryIoU-dirt track': np.float64(0.0), 'min(IoU, B-Iou)-dirt track': np.float64(0.0), 'IoU-apparel,wearing apparel,dress,clothes': np.float64(15.38593441420986), 'BoundaryIoU-apparel,wearing apparel,dress,clothes': np.float64(0.0), 'min(IoU, B-Iou)-apparel,wearing apparel,dress,clothes': np.float64(0.0), 'IoU-pole': np.float64(9.917621588687265), 'BoundaryIoU-pole': np.float64(0.0), 'min(IoU, B-Iou)-pole': np.float64(0.0), 'IoU-land,soil': np.float64(0.8454988101133789), 'BoundaryIoU-land,soil': np.float64(0.0), 'min(IoU, B-Iou)-land,soil': np.float64(0.0), 'IoU-bannister,banister,balustrade,balusters,handrail': np.float64(9.553305788003149), 'BoundaryIoU-bannister,banister,balustrade,balusters,handrail': np.float64(0.0), 'min(IoU, B-Iou)-bannister,banister,balustrade,balusters,handrail': np.float64(0.0), 'IoU-escalator,moving staircase,moving stairway': np.float64(48.620678670691014), 'BoundaryIoU-escalator,moving staircase,moving stairway': np.float64(0.0), 'min(IoU, B-Iou)-escalator,moving staircase,moving stairway': np.float64(0.0), 'IoU-ottoman,pouf,pouffe,puff,hassock': np.float64(46.05235597109425), 'BoundaryIoU-ottoman,pouf,pouffe,puff,hassock': np.float64(0.0), 'min(IoU, B-Iou)-ottoman,pouf,pouffe,puff,hassock': np.float64(0.0), 'IoU-bottle,bottles,water bottle': np.float64(30.802606074865828), 'BoundaryIoU-bottle,bottles,water bottle': np.float64(0.0), 'min(IoU, B-Iou)-bottle,bottles,water bottle': np.float64(0.0), 'IoU-buffet,sideboard': np.float64(0.11849624443354335), 'BoundaryIoU-buffet,sideboard': np.float64(0.0), 'min(IoU, B-Iou)-buffet,sideboard': np.float64(0.0), 'IoU-poster,posting,placard,notice,bill,card': np.float64(29.4336677035639), 'BoundaryIoU-poster,posting,placard,notice,bill,card': np.float64(0.0), 'min(IoU, B-Iou)-poster,posting,placard,notice,bill,card': np.float64(0.0), 'IoU-stage': np.float64(9.033245941627088), 'BoundaryIoU-stage': np.float64(0.0), 'min(IoU, B-Iou)-stage': np.float64(0.0), 'IoU-van': np.float64(33.400244810372705), 'BoundaryIoU-van': np.float64(0.0), 'min(IoU, B-Iou)-van': np.float64(0.0), 'IoU-ship': np.float64(9.99223342616393), 'BoundaryIoU-ship': np.float64(0.0), 'min(IoU, B-Iou)-ship': np.float64(0.0), 'IoU-fountain': np.float64(11.546304409029078), 'BoundaryIoU-fountain': np.float64(0.0), 'min(IoU, B-Iou)-fountain': np.float64(0.0), 'IoU-conveyer belt,conveyor belt,conveyer,conveyor,transporter': np.float64(40.288136722694674), 'BoundaryIoU-conveyer belt,conveyor belt,conveyer,conveyor,transporter': np.float64(0.0), 'min(IoU, B-Iou)-conveyer belt,conveyor belt,conveyer,conveyor,transporter': np.float64(0.0), 'IoU-canopy': np.float64(6.673724849376926), 'BoundaryIoU-canopy': np.float64(0.0), 'min(IoU, B-Iou)-canopy': np.float64(0.0), 'IoU-washer,automatic washer,washing machine': np.float64(68.91454911502018), 'BoundaryIoU-washer,automatic washer,washing machine': np.float64(0.0), 'min(IoU, B-Iou)-washer,automatic washer,washing machine': np.float64(0.0), 'IoU-plaything,toy,toys': np.float64(13.086453681438224), 'BoundaryIoU-plaything,toy,toys': np.float64(0.0), 'min(IoU, B-Iou)-plaything,toy,toys': np.float64(0.0), 'IoU-swimming pool,swimming bath': np.float64(25.81505540907339), 'BoundaryIoU-swimming pool,swimming bath': np.float64(0.0), 'min(IoU, B-Iou)-swimming pool,swimming bath': np.float64(0.0), 'IoU-stool,stools': np.float64(23.129766097184294), 'BoundaryIoU-stool,stools': np.float64(0.0), 'min(IoU, B-Iou)-stool,stools': np.float64(0.0), 'IoU-barrel,cask,barrels,casks': np.float64(36.662742425181236), 'BoundaryIoU-barrel,cask,barrels,casks': np.float64(0.0), 'min(IoU, B-Iou)-barrel,cask,barrels,casks': np.float64(0.0), 'IoU-basket,handbasket': np.float64(30.324760629955495), 'BoundaryIoU-basket,handbasket': np.float64(0.0), 'min(IoU, B-Iou)-basket,handbasket': np.float64(0.0), 'IoU-waterfall,falls': np.float64(58.16567600826581), 'BoundaryIoU-waterfall,falls': np.float64(0.0), 'min(IoU, B-Iou)-waterfall,falls': np.float64(0.0), 'IoU-tent,collapsible shelter': np.float64(91.79266309258477), 'BoundaryIoU-tent,collapsible shelter': np.float64(0.0), 'min(IoU, B-Iou)-tent,collapsible shelter': np.float64(0.0), 'IoU-bag,bags,gift bag,paper bag': np.float64(20.163617071254425), 'BoundaryIoU-bag,bags,gift bag,paper bag': np.float64(0.0), 'min(IoU, B-Iou)-bag,bags,gift bag,paper bag': np.float64(0.0), 'IoU-minibike,motorbike': np.float64(75.91014459708526), 'BoundaryIoU-minibike,motorbike': np.float64(0.0), 'min(IoU, B-Iou)-minibike,motorbike': np.float64(0.0), 'IoU-cradle': np.float64(70.87733504697025), 'BoundaryIoU-cradle': np.float64(0.0), 'min(IoU, B-Iou)-cradle': np.float64(0.0), 'IoU-oven': np.float64(18.066058072283553), 'BoundaryIoU-oven': np.float64(0.0), 'min(IoU, B-Iou)-oven': np.float64(0.0), 'IoU-ball,balls': np.float64(47.52769892866954), 'BoundaryIoU-ball,balls': np.float64(0.0), 'min(IoU, B-Iou)-ball,balls': np.float64(0.0), 'IoU-food,solid food': np.float64(46.59478076447388), 'BoundaryIoU-food,solid food': np.float64(0.0), 'min(IoU, B-Iou)-food,solid food': np.float64(0.0), 'IoU-step,stair': np.float64(0.01185175909175274), 'BoundaryIoU-step,stair': np.float64(0.0), 'min(IoU, B-Iou)-step,stair': np.float64(0.0), 'IoU-tank,storage tank': np.float64(31.263216386003368), 'BoundaryIoU-tank,storage tank': np.float64(0.0), 'min(IoU, B-Iou)-tank,storage tank': np.float64(0.0), 'IoU-trade name,brand name,brand,marque': np.float64(5.019478295045051), 'BoundaryIoU-trade name,brand name,brand,marque': np.float64(0.0), 'min(IoU, B-Iou)-trade name,brand name,brand,marque': np.float64(0.0), 'IoU-microwave,microwave oven': np.float64(80.69934443814869), 'BoundaryIoU-microwave,microwave oven': np.float64(0.0), 'min(IoU, B-Iou)-microwave,microwave oven': np.float64(0.0), 'IoU-plant pots,plant pot,flower pot,flowerpot,planter': np.float64(38.607246757494806), 'BoundaryIoU-plant pots,plant pot,flower pot,flowerpot,planter': np.float64(0.0), 'min(IoU, B-Iou)-plant pots,plant pot,flower pot,flowerpot,planter': np.float64(0.0), 'IoU-animal,animate being,dog,cat,horse,cow,sheep,zebra,girraffe,bird': np.float64(69.01887696341092), 'BoundaryIoU-animal,animate being,dog,cat,horse,cow,sheep,zebra,girraffe,bird': np.float64(0.0), 'min(IoU, B-Iou)-animal,animate being,dog,cat,horse,cow,sheep,zebra,girraffe,bird': np.float64(0.0), 'IoU-bicycle,bike': np.float64(60.66171603259234), 'BoundaryIoU-bicycle,bike': np.float64(0.0), 'min(IoU, B-Iou)-bicycle,bike': np.float64(0.0), 'IoU-lake': np.float64(2.3488741588167836), 'BoundaryIoU-lake': np.float64(0.0), 'min(IoU, B-Iou)-lake': np.float64(0.0), 'IoU-dishwasher,dish washer,dishwashing machine': np.float64(11.121275137582028), 'BoundaryIoU-dishwasher,dish washer,dishwashing machine': np.float64(0.0), 'min(IoU, B-Iou)-dishwasher,dish washer,dishwashing machine': np.float64(0.0), 'IoU-projection screen': np.float64(47.43838617289698), 'BoundaryIoU-projection screen': np.float64(0.0), 'min(IoU, B-Iou)-projection screen': np.float64(0.0), 'IoU-blanket,cover': np.float64(3.073713800548855), 'BoundaryIoU-blanket,cover': np.float64(0.0), 'min(IoU, B-Iou)-blanket,cover': np.float64(0.0), 'IoU-sculpture,sculptures': np.float64(19.24599240122786), 'BoundaryIoU-sculpture,sculptures': np.float64(0.0), 'min(IoU, B-Iou)-sculpture,sculptures': np.float64(0.0), 'IoU-exhaust hood': np.float64(25.77588382068463), 'BoundaryIoU-exhaust hood': np.float64(0.0), 'min(IoU, B-Iou)-exhaust hood': np.float64(0.0), 'IoU-sconce,sconce lamp,sconce light': np.float64(13.9826252444977), 'BoundaryIoU-sconce,sconce lamp,sconce light': np.float64(0.0), 'min(IoU, B-Iou)-sconce,sconce lamp,sconce light': np.float64(0.0), 'IoU-vase,vases': np.float64(39.41306478758623), 'BoundaryIoU-vase,vases': np.float64(0.0), 'min(IoU, B-Iou)-vase,vases': np.float64(0.0), 'IoU-traffic light,traffic signal,traffic lights': np.float64(24.79437082256708), 'BoundaryIoU-traffic light,traffic signal,traffic lights': np.float64(0.0), 'min(IoU, B-Iou)-traffic light,traffic signal,traffic lights': np.float64(0.0), 'IoU-tray,trays': np.float64(0.02426293556635291), 'BoundaryIoU-tray,trays': np.float64(0.0), 'min(IoU, B-Iou)-tray,trays': np.float64(0.0), 'IoU-ashcan,trash can,garbage can,wastebin,ash bin,ash-bin,ashbin,dustbin,trash barrel,trash bin': np.float64(30.376664141140814), 'BoundaryIoU-ashcan,trash can,garbage can,wastebin,ash bin,ash-bin,ashbin,dustbin,trash barrel,trash bin': np.float64(0.0), 'min(IoU, B-Iou)-ashcan,trash can,garbage can,wastebin,ash bin,ash-bin,ashbin,dustbin,trash barrel,trash bin': np.float64(0.0), 'IoU-ceiling fan,floor fan': np.float64(22.462874477070404), 'BoundaryIoU-ceiling fan,floor fan': np.float64(0.0), 'min(IoU, B-Iou)-ceiling fan,floor fan': np.float64(0.0), 'IoU-pier,wharf,wharfage,dock': np.float64(19.248105714807377), 'BoundaryIoU-pier,wharf,wharfage,dock': np.float64(0.0), 'min(IoU, B-Iou)-pier,wharf,wharfage,dock': np.float64(0.0), 'IoU-crt screen': np.float64(0.49643868135207925), 'BoundaryIoU-crt screen': np.float64(0.0), 'min(IoU, B-Iou)-crt screen': np.float64(0.0), 'IoU-plate,plates': np.float64(0.0), 'BoundaryIoU-plate,plates': np.float64(0.0), 'min(IoU, B-Iou)-plate,plates': np.float64(0.0), 'IoU-monitor,monitoring device,monitors': np.float64(4.6781076753898665), 'BoundaryIoU-monitor,monitoring device,monitors': np.float64(0.0), 'min(IoU, B-Iou)-monitor,monitoring device,monitors': np.float64(0.0), 'IoU-bulletin board,notice board': np.float64(10.035431016330005), 'BoundaryIoU-bulletin board,notice board': np.float64(0.0), 'min(IoU, B-Iou)-bulletin board,notice board': np.float64(0.0), 'IoU-shower': np.float64(0.42080787817999454), 'BoundaryIoU-shower': np.float64(0.0), 'min(IoU, B-Iou)-shower': np.float64(0.0), 'IoU-radiator': np.float64(44.582733741222135), 'BoundaryIoU-radiator': np.float64(0.0), 'min(IoU, B-Iou)-radiator': np.float64(0.0), 'IoU-cup,cups,drinking glass,drinking glasses': np.float64(21.010171986883492), 'BoundaryIoU-cup,cups,drinking glass,drinking glasses': np.float64(0.0), 'min(IoU, B-Iou)-cup,cups,drinking glass,drinking glasses': np.float64(0.0), 'IoU-clock': np.float64(26.932737228110714), 'BoundaryIoU-clock': np.float64(0.0), 'min(IoU, B-Iou)-clock': np.float64(0.0), 'IoU-flag,flags': np.float64(60.00660955334672), 'BoundaryIoU-flag,flags': np.float64(0.0), 'min(IoU, B-Iou)-flag,flags': np.float64(0.0), 'mACC': np.float64(52.60069404608301), 'pACC': np.float64(72.87467868116816), 'ACC-wall,walls,brick wall,stone wall,interior wall': np.float64(80.72499072995855), 'ACC-building,buildings,edifice,edifices': np.float64(67.75106303601794), 'ACC-sky,clouds': np.float64(96.64423440826174), 'ACC-floor,flooring': np.float64(55.78301209226978), 'ACC-tree,trees': np.float64(85.64804352216619), 'ACC-ceiling': np.float64(90.97167657057882), 'ACC-road,route,street,roads,streets,routes': np.float64(84.94172587048513), 'ACC-bed,beds': np.float64(95.64014845551104), 'ACC-windowpane,window,windows': np.float64(69.93565327958261), 'ACC-grass,grass field': np.float64(91.46446199696213), 'ACC-cabinet,cabinets,wall mounted cabine': np.float64(76.73573268669477), 'ACC-sidewalk,pavement': np.float64(84.16699752951419), 'ACC-person,child,girl,boy,woman,man,people,children,girls,boys,women,men': np.float64(91.66413784682025), 'ACC-earth,ground': np.float64(2.077207729651351), 'ACC-door,double door,doors': np.float64(45.98250160991966), 'ACC-table,tables,tablecloth': np.float64(69.96394026363097), 'ACC-mountain,mount,mountains': np.float64(47.49975418538842), 'ACC-plant,flora,plant life,plants,bushes': np.float64(81.941334830913), 'ACC-curtain,drape,drapery,mantle,pall': np.float64(90.08832839480337), 'ACC-chair,chairs': np.float64(74.47839212107642), 'ACC-car,automobile,cars': np.float64(87.4348224037576), 'ACC-water': np.float64(5.4475067589937725), 'ACC-painting,picture,paintings,pictures,wallart,framed canvas': np.float64(42.49265685564678), 'ACC-sofa,couch,sofas,couches': np.float64(87.10834486629034), 'ACC-shelf,shelves': np.float64(70.69067643238039), 'ACC-house exterior': np.float64(74.86715685244243), 'ACC-sea,ocean': np.float64(67.10927139397236), 'ACC-mirror,mirrors': np.float64(75.8490131272284), 'ACC-rug,carpet,carpeting': np.float64(89.76337678639706), 'ACC-field': np.float64(8.543255614459824), 'ACC-armchair,armchairs': np.float64(58.4224138868896), 'ACC-seat,seats': np.float64(70.57024432294557), 'ACC-fence,fencing': np.float64(67.39655594245735), 'ACC-desk,desks': np.float64(49.319471495992204), 'ACC-rock,stone,rocks,stones': np.float64(88.26979004429515), 'ACC-wardrobe,closet,press,wardrobes,closets': np.float64(13.184660136462595), 'ACC-lamp,lamps': np.float64(73.22953418009492), 'ACC-bathtub,bathing tub,bath,tub': np.float64(75.24322778828395), 'ACC-railing,rail': np.float64(44.52723015946746), 'ACC-cushion,cushions': np.float64(30.416635637657098), 'ACC-pedestal': np.float64(5.245608118328423), 'ACC-box,boxes': np.float64(19.652753275199217), 'ACC-column,pillar': np.float64(48.59373411501576), 'ACC-signboard,sign,signboards,signs': np.float64(16.083315106445028), 'ACC-chest of drawers,chest,bureau,dresser': np.float64(60.119535732465366), 'ACC-counter': np.float64(25.126995603137857), 'ACC-sand': np.float64(82.33393838391343), 'ACC-sink': np.float64(71.31818187655634), 'ACC-skyscraper,skyscrapers': np.float64(95.00165771500563), 'ACC-fireplace,hearth,open fireplace': np.float64(54.67955801748321), 'ACC-refrigerator,icebox': np.float64(81.28185394849464), 'ACC-grandstand,covered stand': np.float64(55.85487567818493), 'ACC-path': np.float64(12.489685073249692), 'ACC-stairs,steps': np.float64(73.10474461747263), 'ACC-runway': np.float64(80.41614102288872), 'ACC-case,display case,showcase,vitrine': np.float64(42.93143448340727), 'ACC-pool table,billiard table,snooker table': np.float64(94.75901591255958), 'ACC-pillow,pillows': np.float64(0.6324704482190358), 'ACC-screen door,shower door': np.float64(63.773274880233885), 'ACC-stairway,staircase': np.float64(25.569881848671667), 'ACC-river': np.float64(40.96789148608432), 'ACC-bridge,span': np.float64(91.61920077077568), 'ACC-bookcase': np.float64(16.586059395761644), 'ACC-window screen,door screen': np.float64(16.62105776631487), 'ACC-coffee table,cocktail table': np.float64(65.21377483733632), 'ACC-toilet,commode,crapper,potty': np.float64(94.88752822707272), 'ACC-flower,flowers': np.float64(58.92888714954617), 'ACC-book,books': np.float64(67.69719221378043), 'ACC-hill': np.float64(30.89910987048423), 'ACC-bench,benches': np.float64(75.7602400916933), 'ACC-countertop,counter top,worktop': np.float64(80.01227597963836), 'ACC-stove,kitchen stove,kitchen range,kitchen range,cooking stove': np.float64(43.802220685357305), 'ACC-palm tree,palm trees': np.float64(65.22232182393537), 'ACC-kitchen island': np.float64(32.502015761192624), 'ACC-computer,computing machine,computing device,data processor,electronic computer,information processing system': np.float64(29.425957338118657), 'ACC-swivel chair': np.float64(0.0), 'ACC-boat': np.float64(86.69232427644957), 'ACC-bar': np.float64(5.847138359911235), 'ACC-arcade machine,arcade machines': np.float64(21.91610580563981), 'ACC-hovel,hut,hutch,shack,shanty': np.float64(92.06231307069147), 'ACC-bus,autobus,double-decker,jitney,motorbus,motorcoach,omnibus,passenger vehicle': np.float64(96.46695937440217), 'ACC-towel': np.float64(70.34382678919671), 'ACC-light bulb,lightbulb,bulb,incandescent lamp,electric light,electric-light bulb': np.float64(46.66249464010476), 'ACC-truck,motortruck': np.float64(64.85915890488286), 'ACC-tower,towers': np.float64(61.21367100221733), 'ACC-chandelier,pendant,pendent': np.float64(67.53429383277198), 'ACC-awning,sunshade,sunblind': np.float64(43.911649212255675), 'ACC-streetlight,street lamp': np.float64(4.507002058829525), 'ACC-booth,cubicle,stall,kiosk': np.float64(40.39538784509405), 'ACC-television receiver,television,television set,tv,tv set': np.float64(78.5445499476141), 'ACC-airplane,aeroplane,airplanes,aeroplanes': np.float64(65.520290851921), 'ACC-dirt track': np.float64(25.529540776082648), 'ACC-apparel,wearing apparel,dress,clothes': np.float64(79.07532227577447), 'ACC-pole': np.float64(10.964398900164534), 'ACC-land,soil': np.float64(4.993839240414583), 'ACC-bannister,banister,balustrade,balusters,handrail': np.float64(27.98940113990822), 'ACC-escalator,moving staircase,moving stairway': np.float64(78.54659371974616), 'ACC-ottoman,pouf,pouffe,puff,hassock': np.float64(70.32816441662486), 'ACC-bottle,bottles,water bottle': np.float64(43.44334181375725), 'ACC-buffet,sideboard': np.float64(0.188877069968292), 'ACC-poster,posting,placard,notice,bill,card': np.float64(50.58911636550045), 'ACC-stage': np.float64(12.56757844673301), 'ACC-van': np.float64(63.57256197237788), 'ACC-ship': np.float64(10.393793942671714), 'ACC-fountain': np.float64(11.680236782777886), 'ACC-conveyer belt,conveyor belt,conveyer,conveyor,transporter': np.float64(67.63871856107059), 'ACC-canopy': np.float64(12.610858048662632), 'ACC-washer,automatic washer,washing machine': np.float64(75.31261149526836), 'ACC-plaything,toy,toys': np.float64(20.582514480016137), 'ACC-swimming pool,swimming bath': np.float64(80.79098986533388), 'ACC-stool,stools': np.float64(41.96155039360918), 'ACC-barrel,cask,barrels,casks': np.float64(67.32278985095004), 'ACC-basket,handbasket': np.float64(35.949574943577396), 'ACC-waterfall,falls': np.float64(93.86976051410076), 'ACC-tent,collapsible shelter': np.float64(97.34661470929117), 'ACC-bag,bags,gift bag,paper bag': np.float64(36.53695995491185), 'ACC-minibike,motorbike': np.float64(87.5580102021248), 'ACC-cradle': np.float64(97.93315472341123), 'ACC-oven': np.float64(63.734127685355816), 'ACC-ball,balls': np.float64(74.64407267149225), 'ACC-food,solid food': np.float64(80.37117341254387), 'ACC-step,stair': np.float64(0.020113012360015333), 'ACC-tank,storage tank': np.float64(46.82396021887939), 'ACC-trade name,brand name,brand,marque': np.float64(5.528581790953974), 'ACC-microwave,microwave oven': np.float64(94.70557244813999), 'ACC-plant pots,plant pot,flower pot,flowerpot,planter': np.float64(47.15378748441302), 'ACC-animal,animate being,dog,cat,horse,cow,sheep,zebra,girraffe,bird': np.float64(85.80373696437422), 'ACC-bicycle,bike': np.float64(87.89257999825617), 'ACC-lake': np.float64(8.57212717042005), 'ACC-dishwasher,dish washer,dishwashing machine': np.float64(23.66186253465421), 'ACC-projection screen': np.float64(84.66600391714641), 'ACC-blanket,cover': np.float64(3.3571592306249607), 'ACC-sculpture,sculptures': np.float64(19.862800635242884), 'ACC-exhaust hood': np.float64(34.52145320738727), 'ACC-sconce,sconce lamp,sconce light': np.float64(22.36332583661667), 'ACC-vase,vases': np.float64(64.60441251146328), 'ACC-traffic light,traffic signal,traffic lights': np.float64(29.85203153426319), 'ACC-tray,trays': np.float64(0.027234256504797417), 'ACC-ashcan,trash can,garbage can,wastebin,ash bin,ash-bin,ashbin,dustbin,trash barrel,trash bin': np.float64(43.34315120627462), 'ACC-ceiling fan,floor fan': np.float64(34.38463592881249), 'ACC-pier,wharf,wharfage,dock': np.float64(46.943489695670934), 'ACC-crt screen': np.float64(4.1345635833454475), 'ACC-plate,plates': np.float64(0.0), 'ACC-monitor,monitoring device,monitors': np.float64(7.185930088046351), 'ACC-bulletin board,notice board': np.float64(20.48757998093541), 'ACC-shower': np.float64(22.346503970559752), 'ACC-radiator': np.float64(69.45147679324894), 'ACC-cup,cups,drinking glass,drinking glasses': np.float64(27.685259895151297), 'ACC-clock': np.float64(30.503508439218663), 'ACC-flag,flags': np.float64(70.61427913293726)})])
+[07/01 00:00:06] d2.engine.defaults INFO: Evaluation results for openvocab_ade20k_panoptic_val in csv format:
+[07/01 00:00:06] d2.evaluation.testing INFO: copypaste: Task: sem_seg
+[07/01 00:00:06] d2.evaluation.testing INFO: copypaste: mIoU,fwIoU,mACC,pACC
+[07/01 00:00:06] d2.evaluation.testing INFO: copypaste: 35.6154,61.3215,52.6007,72.8747
