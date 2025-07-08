@@ -56,7 +56,7 @@ def build_pixel_decoder(cfg, input_shape):
 
 
 # MSDeformAttn Transformer encoder in deformable detr
-class MSDeformAttnTransformerEncoderOnly(nn.Module):
+class MSDeformAttnTransformerEncoderOnly(nn.Module): # 拼接处理多尺度特征给encoder处理
     def __init__(self, d_model=256, nhead=8,
                  num_encoder_layers=6, dim_feedforward=1024, dropout=0.1,
                  activation="relu",
@@ -105,9 +105,9 @@ class MSDeformAttnTransformerEncoderOnly(nn.Module):
             bs, c, h, w = src.shape
             spatial_shape = (h, w)
             spatial_shapes.append(spatial_shape)
-            src = src.flatten(2).transpose(1, 2)
-            mask = mask.flatten(1)
-            pos_embed = pos_embed.flatten(2).transpose(1, 2)
+            src = src.flatten(2).transpose(1, 2) # Bx(HW)xC
+            mask = mask.flatten(1) # Bx(HW)
+            pos_embed = pos_embed.flatten(2).transpose(1, 2) # Bx(HW)xC
             lvl_pos_embed = pos_embed + self.level_embed[lvl].view(1, 1, -1)
             lvl_pos_embed_flatten.append(lvl_pos_embed)
             src_flatten.append(src)
@@ -117,7 +117,7 @@ class MSDeformAttnTransformerEncoderOnly(nn.Module):
         lvl_pos_embed_flatten = torch.cat(lvl_pos_embed_flatten, 1)
         spatial_shapes = torch.as_tensor(spatial_shapes, dtype=torch.long, device=src_flatten.device)
         level_start_index = torch.cat((spatial_shapes.new_zeros((1, )), spatial_shapes.prod(1).cumsum(0)[:-1]))
-        valid_ratios = torch.stack([self.get_valid_ratio(m) for m in masks], 1)
+        valid_ratios = torch.stack([self.get_valid_ratio(m) for m in masks], 1) # ?
 
         # encoder
         memory = self.encoder(src_flatten, spatial_shapes, level_start_index, valid_ratios, lvl_pos_embed_flatten, mask_flatten)
@@ -125,7 +125,7 @@ class MSDeformAttnTransformerEncoderOnly(nn.Module):
         return memory, spatial_shapes, level_start_index
 
 
-class MSDeformAttnTransformerEncoderLayer(nn.Module):
+class MSDeformAttnTransformerEncoderLayer(nn.Module): # encoder的单层实现
     def __init__(self,
                  d_model=256, d_ffn=1024,
                  dropout=0.1, activation="relu",
@@ -167,7 +167,7 @@ class MSDeformAttnTransformerEncoderLayer(nn.Module):
         return src
 
 
-class MSDeformAttnTransformerEncoder(nn.Module):
+class MSDeformAttnTransformerEncoder(nn.Module): # 多个layer形成encoder
     def __init__(self, encoder_layer, num_layers):
         super().__init__()
         self.layers = _get_clones(encoder_layer, num_layers)
@@ -177,19 +177,23 @@ class MSDeformAttnTransformerEncoder(nn.Module):
     def get_reference_points(spatial_shapes, valid_ratios, device):
         reference_points_list = []
         for lvl, (H_, W_) in enumerate(spatial_shapes):
-
+            # 生成H_个在0.5~H_-0.5之间点，表示像素中心在H上的坐标，再用meshgrid生成网格坐标
             ref_y, ref_x = torch.meshgrid(torch.linspace(0.5, H_ - 0.5, H_, dtype=torch.float32, device=device),
                                           torch.linspace(0.5, W_ - 0.5, W_, dtype=torch.float32, device=device))
+            # 展平后加batch维度，再做归一化
             ref_y = ref_y.reshape(-1)[None] / (valid_ratios[:, None, lvl, 1] * H_)
             ref_x = ref_x.reshape(-1)[None] / (valid_ratios[:, None, lvl, 0] * W_)
+            # Bx(HW)
             ref = torch.stack((ref_x, ref_y), -1)
             reference_points_list.append(ref)
+        # 多尺度拼接后归一化
         reference_points = torch.cat(reference_points_list, 1)
         reference_points = reference_points[:, :, None] * valid_ratios[:, None]
         return reference_points
 
     def forward(self, src, spatial_shapes, level_start_index, valid_ratios, pos=None, padding_mask=None):
         output = src
+        # 只在参考点周围几个位置进行采样和聚合，减少计算量，提升模型对多尺度的适应能力
         reference_points = self.get_reference_points(spatial_shapes, valid_ratios, device=src.device)
         for _, layer in enumerate(self.layers):
             output = layer(output, pos, reference_points, spatial_shapes, level_start_index, padding_mask)
@@ -291,6 +295,7 @@ class MSDeformAttnPixelDecoder(nn.Module):
         self.common_stride = common_stride
 
         # extra fpn levels
+        # 构建特征金字塔
         stride = min(self.transformer_feature_strides)
         self.num_fpn_levels = int(np.log2(stride) - np.log2(self.common_stride))
 
@@ -302,9 +307,11 @@ class MSDeformAttnPixelDecoder(nn.Module):
             lateral_norm = get_norm(norm, conv_dim)
             output_norm = get_norm(norm, conv_dim)
 
+            # 统一channel
             lateral_conv = Conv2d(
                 in_channels, conv_dim, kernel_size=1, bias=use_bias, norm=lateral_norm
             )
+            # 进一步处理增强特征
             output_conv = Conv2d(
                 conv_dim,
                 conv_dim,
@@ -349,6 +356,7 @@ class MSDeformAttnPixelDecoder(nn.Module):
 
     @autocast(enabled=False)
     def forward_features(self, features):
+        # 多尺度特征进行通道对齐，处理位置编码
         srcs = []
         pos = []
         # Reverse feature maps into top-down order (from low to high resolution)
@@ -356,10 +364,12 @@ class MSDeformAttnPixelDecoder(nn.Module):
             x = features[f].float()  # deformable detr does not support half precision
             srcs.append(self.input_proj[idx](x))
             pos.append(self.pe_layer(x))
-
+        
+        # 过encoder进一步融合特征
         y, spatial_shapes, level_start_index = self.transformer(srcs, pos)
         bs = y.shape[0]
 
+        # 计算特征开始的index并分割
         split_size_or_sections = [None] * self.transformer_num_feature_levels
         for i in range(self.transformer_num_feature_levels):
             if i < self.transformer_num_feature_levels - 1:
@@ -368,12 +378,14 @@ class MSDeformAttnPixelDecoder(nn.Module):
                 split_size_or_sections[i] = y.shape[1] - level_start_index[i]
         y = torch.split(y, split_size_or_sections, dim=1)
 
+        # 展开为BxCxHxW
         out = []
         multi_scale_features = []
         num_cur_levels = 0
         for i, z in enumerate(y):
             out.append(z.transpose(1, 2).view(bs, -1, spatial_shapes[i][0], spatial_shapes[i][1]))
 
+        # 特征金字塔
         # append `out` with extra FPN levels
         # Reverse feature maps into top-down order (from low to high resolution)
         for idx, f in enumerate(self.in_features[:self.num_fpn_levels][::-1]):
@@ -382,6 +394,7 @@ class MSDeformAttnPixelDecoder(nn.Module):
             output_conv = self.output_convs[idx]
             cur_fpn = lateral_conv(x)
             # Following FPN implementation, we use nearest upsampling here
+            # 与上一层上采样后直接相加，再过卷积层融合
             y = cur_fpn + F.interpolate(out[-1], size=cur_fpn.shape[-2:], mode="bilinear", align_corners=False)
             y = output_conv(y)
             out.append(y)
@@ -391,4 +404,5 @@ class MSDeformAttnPixelDecoder(nn.Module):
                 multi_scale_features.append(o)
                 num_cur_levels += 1
 
+        # 最后一层处理后的掩码特征、最低层特征、多尺度特征的list
         return self.mask_features(out[-1]), out[0], multi_scale_features

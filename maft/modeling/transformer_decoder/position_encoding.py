@@ -47,11 +47,11 @@ class PositionEmbeddingSine(nn.Module):
         pos_y = y_embed[:, :, :, None] / dim_t
         pos_x = torch.stack(
             (pos_x[:, :, :, 0::2].sin(), pos_x[:, :, :, 1::2].cos()), dim=4
-        ).flatten(3)
+        ).flatten(3) # (B,H,W,C/2) -> (B,H,W,C/4,2) -> (B,H,W,C/2)
         pos_y = torch.stack(
             (pos_y[:, :, :, 0::2].sin(), pos_y[:, :, :, 1::2].cos()), dim=4
         ).flatten(3)
-        pos = torch.cat((pos_y, pos_x), dim=3).permute(0, 3, 1, 2)
+        pos = torch.cat((pos_y, pos_x), dim=3).permute(0, 3, 1, 2) #(B,H,W,C/2) (B,C,H,W)
         return pos
     
     def __repr__(self, _repr_indent=4):

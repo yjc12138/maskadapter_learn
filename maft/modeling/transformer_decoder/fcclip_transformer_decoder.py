@@ -427,16 +427,17 @@ class MultiScaleMaskedTransformerDecoder(nn.Module):
 
         for i in range(self.num_feature_levels):
             size_list.append(x[i].shape[-2:])
-            pos.append(self.pe_layer(x[i], None).flatten(2))
-            src.append(self.input_proj[i](x[i]).flatten(2) + self.level_embed.weight[i][None, :, None])
+            pos.append(self.pe_layer(x[i], None).flatten(2)) # (B,C,HW)
+            src.append(self.input_proj[i](x[i]).flatten(2) + self.level_embed.weight[i][None, :, None]) #先验信息
+            # 区分不同尺度
 
             # flatten NxCxHxW to HWxNxC
             pos[-1] = pos[-1].permute(2, 0, 1)
             src[-1] = src[-1].flatten(2).permute(2, 0, 1)
 
-        _, bs, _ = src[0].shape
+        _, bs, _ = src[0].shape # batch_size
 
-        # QxNxC
+        # QxC to Qx1xC to QxBxC 
         query_embed = self.query_embed.weight.unsqueeze(1).repeat(1, bs, 1)
         output = self.query_feat.weight.unsqueeze(1).repeat(1, bs, 1)
 
@@ -453,10 +454,11 @@ class MultiScaleMaskedTransformerDecoder(nn.Module):
         for i in range(self.num_layers):
             level_index = i % self.num_feature_levels
             attn_mask[torch.where(attn_mask.sum(-1) == attn_mask.shape[-1])] = False
+            # 全为True则重置为False
             # attention: cross-attention first
             output = self.transformer_cross_attention_layers[i](
                 output, src[level_index],
-                memory_mask=attn_mask,
+                memory_mask=attn_mask, # 低置信度区域标记true遮盖掉，忽略无关背景
                 memory_key_padding_mask=None,  # here we do not apply masking on padded region
                 pos=pos[level_index], query_pos=query_embed
             )
@@ -490,7 +492,7 @@ class MultiScaleMaskedTransformerDecoder(nn.Module):
 
     def forward_prediction_heads(self, output, mask_features, attn_mask_target_size, text_classifier, num_templates):
         decoder_output = self.decoder_norm(output)
-        decoder_output = decoder_output.transpose(0, 1)
+        decoder_output = decoder_output.transpose(0, 1) # BxQxC
         mask_embed = self.mask_embed(decoder_output)
         outputs_mask = torch.einsum("bqc,bchw->bqhw", mask_embed, mask_features)
 

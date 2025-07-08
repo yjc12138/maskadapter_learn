@@ -65,7 +65,7 @@ def build_pixel_decoder(cfg, input_shape):
     从`cfg.MODEL.ONE_FORMER.PIXEL_DECODER_NAME`构建像素解码器。
     """
     # 从配置中获取像素解码器名称
-    name = cfg.MODEL.SEM_SEG_HEAD.PIXEL_DECODER_NAME
+    name = cfg.MODEL.SEM_SEG_HEAD.PIXEL_DECODER_NAME#MSDeformAttnPixelDecoder
     # 使用注册表获取模型
     model = SEM_SEG_HEADS_REGISTRY.get(name)(cfg, input_shape)
     # 获取forward_features方法
@@ -153,11 +153,11 @@ class MSDeformAttnTransformerEncoderOnly(nn.Module):
             # 记录空间形状
             spatial_shape = (h, w)
             spatial_shapes.append(spatial_shape)
-            # 将特征展平并转置
+            # 将特征展平并转置 变成torch.Size([6, 1024, 256])
             src = src.flatten(2).transpose(1, 2)
-            # 将掩码展平
+            # 将掩码展平 变成torch.Size([6, 1024])
             mask = mask.flatten(1)
-            # 将位置嵌入展平并转置
+            # 将位置嵌入展平并转置 变成torch.Size([6, 1024, 256])
             pos_embed = pos_embed.flatten(2).transpose(1, 2)
             # 添加层级嵌入
             lvl_pos_embed = pos_embed + self.level_embed[lvl].view(1, 1, -1)
@@ -166,15 +166,15 @@ class MSDeformAttnTransformerEncoderOnly(nn.Module):
             src_flatten.append(src)
             mask_flatten.append(mask)
         # 连接所有特征层的展平结果
-        src_flatten = torch.cat(src_flatten, 1)
-        mask_flatten = torch.cat(mask_flatten, 1)
-        lvl_pos_embed_flatten = torch.cat(lvl_pos_embed_flatten, 1)
-        # 将空间形状转换为张量
+        src_flatten = torch.cat(src_flatten, 1)#torch.Size([6, 1024+4096+16384, 256])
+        mask_flatten = torch.cat(mask_flatten, 1)#torch.Size([6, 1024+4096+16384])
+        lvl_pos_embed_flatten = torch.cat(lvl_pos_embed_flatten, 1)#torch.Size([6, 1024+4096+16384, 256])
+        # 将空间形状转换为张量 tensor([[32,32],[64,64],[128, 128]])
         spatial_shapes = torch.as_tensor(spatial_shapes, dtype=torch.long, device=src_flatten.device)
-        # 计算每个层级的起始索引
+        # 计算每个层级的起始索引 tensor([0, 1024, 5120], device='cuda:1')
         level_start_index = torch.cat((spatial_shapes.new_zeros((1, )), spatial_shapes.prod(1).cumsum(0)[:-1]))
-        # 计算有效比例
-        valid_ratios = torch.stack([self.get_valid_ratio(m) for m in masks], 1)
+        # 计算有效比例 torch.Size([6, 3, 2]) 全是tensor([[1.0000, 1.0000]
+        valid_ratios = torch.stack([self.get_valid_ratio(m) for m in masks], 1)# ?
 
         # 通过编码器处理
         memory = self.encoder(src_flatten, spatial_shapes, level_start_index, valid_ratios, lvl_pos_embed_flatten, mask_flatten)
@@ -191,7 +191,7 @@ class MSDeformAttnTransformerEncoderLayer(nn.Module):
         # 初始化父类
         super().__init__()
 
-        # 自注意力层
+        # 自注意力层   MSDeformAttn多尺度可变形注意力
         self.self_attn = MSDeformAttn(d_model, n_levels, n_heads, n_points)
         # dropout层
         self.dropout1 = nn.Dropout(dropout)
@@ -245,7 +245,7 @@ class MSDeformAttnTransformerEncoder(nn.Module):
     def __init__(self, encoder_layer, num_layers):
         # 初始化父类
         super().__init__()
-        # 创建多个编码器层
+        # 创建多个编码器层 MSDeformAttnTransformerEncoderLayer 6个
         self.layers = _get_clones(encoder_layer, num_layers)
         # 记录层数
         self.num_layers = num_layers
@@ -256,22 +256,22 @@ class MSDeformAttnTransformerEncoder(nn.Module):
         reference_points_list = []
         # 遍历每个特征层
         for lvl, (H_, W_) in enumerate(spatial_shapes):
-            # 创建网格
+            # 创建网格 torch.Size([32, 32])
             ref_y, ref_x = torch.meshgrid(torch.linspace(0.5, H_ - 0.5, H_, dtype=torch.float32, device=device),
                                           torch.linspace(0.5, W_ - 0.5, W_, dtype=torch.float32, device=device))
-            # 归一化y坐标
+            # 归一化y坐标 归一化到[0,1]范围内 torch.Size([6, 1024])
             ref_y = ref_y.reshape(-1)[None] / (valid_ratios[:, None, lvl, 1] * H_)
-            # 归一化x坐标
+            # 归一化x坐标 valid_ratios.shape torch.Size([6, 3, 2])
             ref_x = ref_x.reshape(-1)[None] / (valid_ratios[:, None, lvl, 0] * W_)
-            # 堆叠x和y坐标
+            # 堆叠x和y坐标 torch.Size([6, 1024, 2])
             ref = torch.stack((ref_x, ref_y), -1)
             # 添加到列表中
             reference_points_list.append(ref)
-        # 连接所有层的参考点
+        # 连接所有层的参考点 torch.Size([6, 21504, 2])
         reference_points = torch.cat(reference_points_list, 1)
-        # 根据有效比例调整参考点
+        # 根据有效比例调整参考点 torch.Size([6, 21504, 1, 2])*torch.Size([6, 1, 3, 2])
         reference_points = reference_points[:, :, None] * valid_ratios[:, None]
-        # 返回参考点
+        # 返回参考点 torch.Size([6, 21504, 3, 2])
         return reference_points
 
     def forward(self, src, spatial_shapes, level_start_index, valid_ratios, pos=None, padding_mask=None):
@@ -314,7 +314,7 @@ class MSDeformAttnPixelDecoder(nn.Module):
             transformer_nheads: transformer中的头数
             transformer_dim_feedforward: 前馈网络的维度
             transformer_enc_layers: transformer编码器层数
-            conv_dims: 中间卷积层的输出通道数
+            conv_dim: 中间卷积层的输出通道数
             mask_dim: 最终卷积层的输出通道数
             norm (str或callable): 所有卷积层的归一化
         """
@@ -353,7 +353,7 @@ class MSDeformAttnPixelDecoder(nn.Module):
                 # 创建投影层
                 input_proj_list.append(nn.Sequential(
                     nn.Conv2d(in_channels, conv_dim, kernel_size=1),
-                    nn.GroupNorm(32, conv_dim),
+                    nn.GroupNorm(32, conv_dim),#256
                 ))
             # 创建投影层列表
             self.input_proj = nn.ModuleList(input_proj_list)
@@ -379,7 +379,7 @@ class MSDeformAttnPixelDecoder(nn.Module):
             num_encoder_layers=transformer_enc_layers,
             num_feature_levels=self.transformer_num_feature_levels,
         )
-        # 设置位置编码步数
+        # 设置位置编码步数 N_steps=128
         N_steps = conv_dim // 2
         # 创建位置编码层
         self.pe_layer = PositionEmbeddingSine(N_steps, normalize=True)
@@ -473,8 +473,8 @@ class MSDeformAttnPixelDecoder(nn.Module):
         # 设置transformer编码器层数
         ret[
             "transformer_enc_layers"
-        ] = cfg.MODEL.SEM_SEG_HEAD.TRANSFORMER_ENC_LAYERS
-        # 设置transformer输入特征
+        ] = cfg.MODEL.SEM_SEG_HEAD.TRANSFORMER_ENC_LAYERS #6
+        # 设置transformer输入特征["res3", "res4", "res5"]?没看懂对应论文的哪部分
         ret["transformer_in_features"] = cfg.MODEL.SEM_SEG_HEAD.DEFORMABLE_TRANSFORMER_ENCODER_IN_FEATURES
         # 设置公共步长
         ret["common_stride"] = cfg.MODEL.SEM_SEG_HEAD.COMMON_STRIDE
@@ -487,21 +487,21 @@ class MSDeformAttnPixelDecoder(nn.Module):
         srcs = []
         # 创建位置编码列表
         pos = []
-        # 将特征图反转为自顶向下顺序（从低到高分辨率）
-        for idx, f in enumerate(self.transformer_in_features[::-1]):
-            # 获取特征并转换为float类型（可变形detr不支持半精度）
+        # 将特征图反转为自顶向下顺序（从低到高分辨率） ['res5', 'res4', 'res3']
+        for idx, f in enumerate(self.transformer_in_features[::-1]): 
+            # 获取特征并转换为float类型感觉是防御性措施
             x = features[f].float()
-            # 应用投影
+            # 应用投影 6,256,32,32 6,256,64,64 6,256,128,128
             srcs.append(self.input_proj[idx](x))
-            # 计算位置编码
+            # 计算位置编码 6,256,32,32 6,256,64,64 6,256,128,128
             pos.append(self.pe_layer(x))
 
-        # 通过transformer处理
+        # 通过transformer处理 y 6,21504=16384+4096+1024,256 spatial_shapes tensor([[32,32],[64,64],[128,128]])  level_start_index tensor([0, 1024, 5120])
         y, spatial_shapes, level_start_index = self.transformer(srcs, pos)
         # 获取批次大小
         bs = y.shape[0]
 
-        # 准备分割大小或部分
+        # 准备分割大小或部分 3 [None, None, None]
         split_size_or_sections = [None] * self.transformer_num_feature_levels
         # 计算每个层级的分割大小
         for i in range(self.transformer_num_feature_levels):
@@ -509,7 +509,7 @@ class MSDeformAttnPixelDecoder(nn.Module):
                 split_size_or_sections[i] = level_start_index[i + 1] - level_start_index[i]
             else:
                 split_size_or_sections[i] = y.shape[1] - level_start_index[i]
-        # 按维度1分割y
+        # 按维度1分割y torch.Size([6, 21504, 256])
         y = torch.split(y, split_size_or_sections, dim=1)
 
         # 创建输出列表
@@ -522,9 +522,9 @@ class MSDeformAttnPixelDecoder(nn.Module):
         for i, z in enumerate(y):
             # 重塑并添加到输出列表
             out.append(z.transpose(1, 2).view(bs, -1, spatial_shapes[i][0], spatial_shapes[i][1]))
-
+        # out torch.Size([6, 256, 32, 32]) torch.Size([6, 256, 64, 64]) torch.Size([6, 256, 128, 128])
         # 使用额外的FPN层扩展`out`
-        # 将特征图反转为自顶向下顺序（从低到高分辨率）
+        # 将特征图反转为自顶向下顺序（从低到高分辨率） self.num_fpn_levels=1  self.in_features=['res2', 'res3', 'res4', 'res5']
         for idx, f in enumerate(self.in_features[:self.num_fpn_levels][::-1]):
             # 获取特征并转换为float类型
             x = features[f].float()
@@ -532,14 +532,14 @@ class MSDeformAttnPixelDecoder(nn.Module):
             lateral_conv = self.lateral_convs[idx]
             # 获取输出卷积
             output_conv = self.output_convs[idx]
-            # 应用侧向卷积
+            # 应用侧向卷积 torch.Size([6, 256, 256, 256])
             cur_fpn = lateral_conv(x)
-            # 按照FPN实现，这里使用最近邻上采样
+            # 按照FPN实现，这里使用最近邻上采样 out[-1].shape torch.Size([6, 256, 128, 128])
             y = cur_fpn + F.interpolate(out[-1], size=cur_fpn.shape[-2:], mode="bilinear", align_corners=False)
             # 应用输出卷积
             y = output_conv(y)
-            # 添加到输出列表
-            out.append(y)
+            # 添加到输出列表 torch.Size([6, 256, 256, 256])
+            out.append(y)#论文中最后一层
 
         # 收集多尺度特征
         for o in out:
@@ -547,5 +547,5 @@ class MSDeformAttnPixelDecoder(nn.Module):
                 multi_scale_features.append(o)
                 num_cur_levels += 1
 
-        # 返回掩码特征、第一个输出和多尺度特征
+        # 返回掩码特征、第一个输出和多尺度特征 self.mask_features = Conv2d(256, 256, kernel_size=1, stride=1, padding=0)?   len(multi_scale_features) 3 32,64,128
         return self.mask_features(out[-1]), out[0], multi_scale_features

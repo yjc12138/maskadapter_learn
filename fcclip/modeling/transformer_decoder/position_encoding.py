@@ -30,6 +30,7 @@ class PositionEmbeddingSine(nn.Module):
         self.scale = scale
 
     def forward(self, x, mask=None):
+        #torch.Size([6, 32, 32])
         if mask is None:
             mask = torch.zeros((x.size(0), x.size(2), x.size(3)), device=x.device, dtype=torch.bool)
         not_mask = ~mask
@@ -37,12 +38,12 @@ class PositionEmbeddingSine(nn.Module):
         x_embed = not_mask.cumsum(2, dtype=torch.float32)
         if self.normalize:
             eps = 1e-6
-            y_embed = y_embed / (y_embed[:, -1:, :] + eps) * self.scale
+            y_embed = y_embed / (y_embed[:, -1:, :] + eps) * self.scale#2pi
             x_embed = x_embed / (x_embed[:, :, -1:] + eps) * self.scale
-
+        #self.num_pos_feats=128 self.temperature=10000 dim_t=torch.Size([128])
         dim_t = torch.arange(self.num_pos_feats, dtype=torch.float32, device=x.device)
         dim_t = self.temperature ** (2 * (dim_t // 2) / self.num_pos_feats)
-
+        #pos_x=torch.Size([6, 32, 32, 128])
         pos_x = x_embed[:, :, :, None] / dim_t
         pos_y = y_embed[:, :, :, None] / dim_t
         pos_x = torch.stack(
@@ -52,7 +53,7 @@ class PositionEmbeddingSine(nn.Module):
             (pos_y[:, :, :, 0::2].sin(), pos_y[:, :, :, 1::2].cos()), dim=4
         ).flatten(3)
         pos = torch.cat((pos_y, pos_x), dim=3).permute(0, 3, 1, 2)
-        return pos
+        return pos#torch.Size([6, 256, 32, 32])
     
     def __repr__(self, _repr_indent=4):
         head = "Positional encoding " + self.__class__.__name__

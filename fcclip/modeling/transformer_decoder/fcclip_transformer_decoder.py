@@ -31,7 +31,7 @@ def build_transformer_decoder(cfg, in_channels, mask_classification=True):
     """
     Build a instance embedding branch from `cfg.MODEL.INS_EMBED_HEAD.NAME`.
     """
-    name = cfg.MODEL.MASK_FORMER.TRANSFORMER_DECODER_NAME
+    name = cfg.MODEL.MASK_FORMER.TRANSFORMER_DECODER_NAME #MultiScaleMaskedTransformerDecoder
     return TRANSFORMER_DECODER_REGISTRY.get(name)(cfg, in_channels, mask_classification)
 
 
@@ -51,7 +51,7 @@ def get_classification_logits(x, text_classifier, logit_scale, num_templates=Non
         cur_idx += num_t
     final_pred_logits.append(pred_logits[:, :, -1]) # the last classifier is for void
     final_pred_logits = torch.stack(final_pred_logits, dim=-1)
-    return final_pred_logits
+    return final_pred_logits#torch.Size([6, 250, 134])
 
 # Ref: https://github.com/NVlabs/ODISE/blob/e97b06c424c575fec9fc5368dd4b3e050d91abc4/odise/modeling/meta_arch/odise.py#L923
 class MaskPooling(nn.Module):
@@ -64,7 +64,7 @@ class MaskPooling(nn.Module):
         """
         Args:
             x: [B, C, H, W]
-            mask: [B, Q, H, W]
+            mask: [B, Q, H, W] torch.Size([6, 250, 256, 256])
         """
         if not x.shape[-2:] == mask.shape[-2:]:
             # reshape mask to x
@@ -195,7 +195,7 @@ class CrossAttentionLayer(nn.Module):
                 memory_key_padding_mask: Optional[Tensor] = None,
                 pos: Optional[Tensor] = None,
                 query_pos: Optional[Tensor] = None):
-        if self.normalize_before:
+        if self.normalize_before:#self.normalize_before=False
             return self.forward_pre(tgt, memory, memory_mask,
                                     memory_key_padding_mask, pos, query_pos)
         return self.forward_post(tgt, memory, memory_mask,
@@ -392,7 +392,7 @@ class MultiScaleMaskedTransformerDecoder(nn.Module):
         
         ret["num_classes"] = cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES
         ret["hidden_dim"] = cfg.MODEL.MASK_FORMER.HIDDEN_DIM
-        ret["num_queries"] = cfg.MODEL.MASK_FORMER.NUM_OBJECT_QUERIES
+        ret["num_queries"] = cfg.MODEL.MASK_FORMER.NUM_OBJECT_QUERIES #250
         # Transformer parameters:
         ret["nheads"] = cfg.MODEL.MASK_FORMER.NHEADS
         ret["dim_feedforward"] = cfg.MODEL.MASK_FORMER.DIM_FEEDFORWARD
@@ -424,30 +424,31 @@ class MultiScaleMaskedTransformerDecoder(nn.Module):
         for i in range(self.num_feature_levels):
             size_list.append(x[i].shape[-2:])
             pos.append(self.pe_layer(x[i], None).flatten(2))
+            #先验信息 维度广播
             src.append(self.input_proj[i](x[i]).flatten(2) + self.level_embed.weight[i][None, :, None])
-
-            # flatten NxCxHxW to HWxNxC
+            
+            # flatten NxCx(HW) to HWxNxC
             pos[-1] = pos[-1].permute(2, 0, 1)
             src[-1] = src[-1].permute(2, 0, 1)
 
-        _, bs, _ = src[0].shape
+        _, bs, _ = src[0].shape #torch.Size([1024, 6, 256])
 
-        # QxNxC
-        query_embed = self.query_embed.weight.unsqueeze(1).repeat(1, bs, 1)
+        # QxNxC self.query_embed.weight torch.Size([250, 256])  ? 自学不变信息
+        query_embed = self.query_embed.weight.unsqueeze(1).repeat(1, bs, 1) #torch.Size([250, 6, 256])
         output = self.query_feat.weight.unsqueeze(1).repeat(1, bs, 1)
 
         predictions_class = []
         predictions_mask = []
 
-        # prediction heads on learnable query features
+        # prediction heads on learnable query features ?
         outputs_class, outputs_mask, attn_mask = self.forward_prediction_heads(output, mask_features, attn_mask_target_size=size_list[0],
                                                                                text_classifier=text_classifier, num_templates=num_templates)
-        predictions_class.append(outputs_class)
-        predictions_mask.append(outputs_mask)
+        predictions_class.append(outputs_class)#torch.Size([6, 250, 134])
+        predictions_mask.append(outputs_mask)#torch.Size([6, 250, 256, 256])
 
-        for i in range(self.num_layers):
-            level_index = i % self.num_feature_levels
-            attn_mask[torch.where(attn_mask.sum(-1) == attn_mask.shape[-1])] = False
+        for i in range(self.num_layers):#self.num_layers=9
+            level_index = i % self.num_feature_levels#self.num_feature_levels=3
+            attn_mask[torch.where(attn_mask.sum(-1) == attn_mask.shape[-1])] = False 
             # attention: cross-attention first
             output = self.transformer_cross_attention_layers[i](
                 output, src[level_index],
@@ -484,15 +485,15 @@ class MultiScaleMaskedTransformerDecoder(nn.Module):
         return out
 
     def forward_prediction_heads(self, output, mask_features, attn_mask_target_size, text_classifier, num_templates):
-        decoder_output = self.decoder_norm(output)
-        decoder_output = decoder_output.transpose(0, 1)
-        mask_embed = self.mask_embed(decoder_output)
+        decoder_output = self.decoder_norm(output) # LayerNorm((256,))
+        decoder_output = decoder_output.transpose(0, 1) #torch.Size([6, 250, 256]) query_feature
+        mask_embed = self.mask_embed(decoder_output) #MLP(hidden_dim, hidden_dim, mask_dim, 3) MLP(256,256,256,3)
         outputs_mask = torch.einsum("bqc,bchw->bqhw", mask_embed, mask_features)
 
         # fcclip head
         maskpool_embeddings = self.mask_pooling(x=mask_features, mask=outputs_mask) # [B, Q, C]
         maskpool_embeddings = self._mask_pooling_proj(maskpool_embeddings)
-        class_embed = self.class_embed(maskpool_embeddings + decoder_output)
+        class_embed = self.class_embed(maskpool_embeddings + decoder_output) # class_embed.shape torch.Size([6, 250, 768])
         outputs_class = get_classification_logits(class_embed, text_classifier, self.logit_scale, num_templates)
 
         # NOTE: prediction is of higher-resolution
@@ -501,7 +502,7 @@ class MultiScaleMaskedTransformerDecoder(nn.Module):
         # must use bool type
         # If a BoolTensor is provided, positions with ``True`` are not allowed to attend while ``False`` values will be unchanged.
         attn_mask = (attn_mask.sigmoid().flatten(2).unsqueeze(1).repeat(1, self.num_heads, 1, 1).flatten(0, 1) < 0.5).bool()
-        attn_mask = attn_mask.detach()
+        attn_mask = attn_mask.detach() #torch.Size([48, 250, 1024]) self.num_heads=8
 
         return outputs_class, outputs_mask, attn_mask
 
