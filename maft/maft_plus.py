@@ -401,7 +401,7 @@ class MAFT_Plus(nn.Module):
             outputs = self.mask_adapter(clip_vis_dense, binary_masks)
             
             maps_for_pooling = F.interpolate(outputs, size=clip_vis_dense.shape[-2:],
-                                                mode='bilinear', align_corners=False)
+                                                mode='bilinear', align_corners=False)#tsne   clip_vis_dense
             if "convnext" in self.backbone.model_name.lower():
                 B,C = clip_feature.size(0),clip_feature.size(1)
                 N = maps_for_pooling.size(1)

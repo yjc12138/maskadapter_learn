@@ -39,8 +39,13 @@ INPUT:
   DATASET_MAPPER_NAME: "mask_former_semantic"  # mask_former_semantic coco_panoptic_lsj
 DATASETS:
   TRAIN: ("openvocab_coco_2017_train_stuff_sem_seg",)  #  openvocab_coco_2017_train_panoptic_with_sem_seg
-  TEST: ('openvocab_ade20k_panoptic_val',) 
+  # TEST: ('openvocab_ade20k_panoptic_val',) 
+  TEST: ("openvocab_ade20k_panoptic_val", "openvocab_ade20k_full_sem_seg_val", "openvocab_coco_2017_val_panoptic_with_sem_seg",)
 
 
+# SOLVER:
+#   CHECKPOINT_PERIOD: 1000  # 每 次迭代保存一次检查点
 
-OUTPUT_DIR: ./training/maftp-large/ade20k
+# TEST:
+#   EVAL_PERIOD: 1000  # 每 次迭代评估一次
+OUTPUT_DIR: ./training/maftp-large/ade20k_train

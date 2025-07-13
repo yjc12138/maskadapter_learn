@@ -32,6 +32,100 @@ from detectron2.utils.file_io import PathManager
 from detectron2.utils.logger import create_small_table
 
 
+# 添加安全版本的_evaluate_predictions_on_coco函数，处理'info'字段缺失的问题
+def _evaluate_predictions_on_coco_safe(
+    coco_gt,
+    coco_results,
+    iou_type,
+    kpt_oks_sigmas=None,
+    cocoeval_fn=COCOeval_opt,
+    img_ids=None,
+    max_dets_per_image=None,
+):
+    """
+    安全版的评估函数，处理'info'字段缺失的情况
+    """
+    assert len(coco_results) > 0
+
+    if iou_type == "segm":
+        coco_results = copy.deepcopy(coco_results)
+        # When evaluating mask AP, if the results contain bbox, cocoapi will
+        # use the box area as the area of the instance, instead of the mask area.
+        # This leads to a different definition of small/medium/large.
+        # We remove the bbox field to let mask AP use mask area.
+        for c in coco_results:
+            c.pop("bbox", None)
+
+    # 创建一个安全的加载方式，处理'info'字段缺失的情况
+    try:
+        coco_dt = coco_gt.loadRes(coco_results)
+    except KeyError as e:
+        if str(e) == "'info'":
+            # 如果缺少'info'字段，我们手动添加它
+            logger = logging.getLogger(__name__)
+            logger.warning("Dataset缺少'info'字段，正在添加...")
+            
+            # 创建一个临时副本以避免修改原始对象
+            temp_coco_gt = copy.deepcopy(coco_gt)
+            if 'info' not in temp_coco_gt.dataset:
+                temp_coco_gt.dataset['info'] = {
+                    'description': 'Automatically added info field',
+                    'url': '',
+                    'version': '1.0',
+                    'year': 2023,
+                    'contributor': 'auto-fix',
+                    'date_created': '2023-07-08'
+                }
+            
+            # 使用修复后的对象加载结果
+            coco_dt = temp_coco_gt.loadRes(coco_results)
+        else:
+            # 如果是其他类型的KeyError，继续抛出
+            raise
+            
+    coco_eval = cocoeval_fn(coco_gt, coco_dt, iou_type)
+    # For COCO, the default max_dets_per_image is [1, 10, 100].
+    if max_dets_per_image is None:
+        max_dets_per_image = [1, 10, 100]  # Default from COCOEval
+    else:
+        assert (
+            len(max_dets_per_image) >= 3
+        ), "COCOeval requires maxDets (and max_dets_per_image) to have length at least 3"
+        # In the case that user supplies a custom input for max_dets_per_image,
+        # apply COCOevalMaxDets to evaluate AP with the custom input.
+        if max_dets_per_image[2] != 100:
+            coco_eval = COCOevalMaxDets(coco_gt, coco_dt, iou_type)
+    if iou_type != "keypoints":
+        coco_eval.params.maxDets = max_dets_per_image
+
+    if img_ids is not None:
+        coco_eval.params.imgIds = img_ids
+
+    if iou_type == "keypoints":
+        # Use the COCO default keypoint OKS sigmas unless overrides are specified
+        if kpt_oks_sigmas:
+            assert hasattr(coco_eval.params, "kpt_oks_sigmas"), "pycocotools is too old!"
+            coco_eval.params.kpt_oks_sigmas = np.array(kpt_oks_sigmas)
+        # COCOAPI requires every detection and every gt to have keypoints, so
+        # we just take the first entry from both
+        num_keypoints_dt = len(coco_results[0]["keypoints"]) // 3
+        num_keypoints_gt = len(next(iter(coco_gt.anns.values()))["keypoints"]) // 3
+        num_keypoints_oks = len(coco_eval.params.kpt_oks_sigmas)
+        assert num_keypoints_oks == num_keypoints_dt == num_keypoints_gt, (
+            f"[COCOEvaluator] Prediction contain {num_keypoints_dt} keypoints. "
+            f"Ground truth contains {num_keypoints_gt} keypoints. "
+            f"The length of cfg.TEST.KEYPOINT_OKS_SIGMAS is {num_keypoints_oks}. "
+            "They have to agree with each other. For meaning of OKS, please refer to "
+            "http://cocodataset.org/#keypoints-eval."
+        )
+
+    coco_eval.evaluate()
+    coco_eval.accumulate()
+    coco_eval.summarize()
+
+    return coco_eval
+
+
 # modified from COCOEvaluator for instance segmetnat
 class InstanceSegEvaluator(COCOEvaluator):
     """
@@ -94,7 +188,7 @@ class InstanceSegEvaluator(COCOEvaluator):
         for task in sorted(tasks):
             assert task in {"bbox", "segm", "keypoints"}, f"Got unknown task: {task}!"
             coco_eval = (
-                _evaluate_predictions_on_coco(
+                _evaluate_predictions_on_coco_safe(  # 使用安全版本的函数
                     self._coco_api,
                     coco_results,
                     task,

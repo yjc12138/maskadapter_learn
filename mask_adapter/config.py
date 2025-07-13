@@ -140,6 +140,11 @@ def add_mask_adapter_config(cfg):
     cfg.MODEL.MASK_ADAPTER.MASK_THRESHOLD  = 0.45
     cfg.MODEL.MASK_ADAPTER.TRAIN_MAFT = False
     
+    # 添加辅助损失的配置项
+    cfg.MODEL.MASK_ADAPTER.AUX_L2_WEIGHT = 0.5
+    cfg.MODEL.MASK_ADAPTER.AUX_COSINE_WEIGHT = 0.5
+    cfg.MODEL.MASK_ADAPTER.AUX_STRUCTURE_WEIGHT = 0.3
+    
     cfg.MODEL.MASK_ADAPTER.NAME = "MASKAdapterHead"
     
     cfg.DATALOADER.DATASET_RATIO = [1, 1]

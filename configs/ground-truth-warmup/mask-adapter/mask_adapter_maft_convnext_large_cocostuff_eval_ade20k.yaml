@@ -8,6 +8,10 @@ MODEL:
     USE_CHECKPOINT: False
     NUM_OUTPUT_MAPS: 16
     TRAIN_MAFT: True
+    # 辅助损失权重
+    AUX_L2_WEIGHT: 0.5
+    AUX_COSINE_WEIGHT: 0.5
+    AUX_STRUCTURE_WEIGHT: 0.3
   # backbone part.
   BACKBONE:
     NAME: "CLIP"
@@ -38,3 +42,9 @@ DATASETS:
 DATALOADER:
   SAMPLER_TRAIN: "TrainingSampler"
 OUTPUT_DIR: ./training/first-phase/maft_l_adapter
+
+SOLVER:
+  CHECKPOINT_PERIOD: 10000
+
+TEST:
+  EVAL_PERIOD: 10000  # 每 次迭代评估一次

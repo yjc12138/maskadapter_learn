@@ -131,6 +131,8 @@ class MASK_Adapter(nn.Module):
         self.train_maft = train_maft
         self.num_output_maps = num_output_maps
         
+        self.conv_enhance = nn.ModuleDict({})
+        
         if self.train_maft:
             if '_base' in backbone.model_name.lower():
                 cdt_params = [640, 8]
@@ -248,13 +250,23 @@ class MASK_Adapter(nn.Module):
     @classmethod
     def from_config(cls, cfg):
         backbone = build_backbone(cfg)
-        mask_adapter = build_mask_adapter(cfg, cfg.MODEL.MASK_ADAPTER.NAME)
+        mask_adapter = build_mask_adapter(cfg, cfg.MODEL.MASK_ADAPTER.NAME)#'MASKAdapterHead'
 
         # loss weights
-        class_weight = cfg.MODEL.MASK_FORMER.CLASS_WEIGHT
+        class_weight = cfg.MODEL.MASK_FORMER.CLASS_WEIGHT#2.0
+        
+        # 添加辅助损失权重，如果配置中不存在则使用默认值
+        aux_l2_weight = getattr(cfg.MODEL.MASK_ADAPTER, "AUX_L2_WEIGHT", 0.5)
+        aux_cosine_weight = getattr(cfg.MODEL.MASK_ADAPTER, "AUX_COSINE_WEIGHT", 0.5)
+        aux_structure_weight = getattr(cfg.MODEL.MASK_ADAPTER, "AUX_STRUCTURE_WEIGHT", 0.3)
 
         # building criterion
-        weight_dict = {"loss_ce": class_weight}
+        weight_dict = {
+            "loss_ce": class_weight,
+            "loss_aux_l2": aux_l2_weight,
+            "loss_aux_cosine": aux_cosine_weight,
+            "loss_aux_structure": aux_structure_weight
+        }
 
         losses = ["labels"]
 
@@ -354,7 +366,25 @@ class MASK_Adapter(nn.Module):
             else:
                 targets = None            
 
-            semantic_activation_maps = self.mask_adapter(clip_vis_dense, masks)
+            semantic_activation_maps = self.mask_adapter(clip_vis_dense, masks)#semantic_activation_maps.shape torch.Size([2, 512, 24, 24]) batch_size=8
+            
+            # 保存前特征图用于辅助损失
+            pre_features = semantic_activation_maps.clone()
+            
+            # 应用卷积增强，动态创建或获取对应通道数的卷积层
+            in_channels = semantic_activation_maps.size(1)
+            if str(in_channels) not in self.conv_enhance:
+                self.conv_enhance[str(in_channels)] = nn.Sequential(
+                    nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1),
+                    nn.BatchNorm2d(in_channels),
+                    nn.ReLU(inplace=True),
+                    nn.Conv2d(in_channels, in_channels, kernel_size=1)
+                ).to(semantic_activation_maps.device)
+            
+            semantic_activation_maps = self.conv_enhance[str(in_channels)](semantic_activation_maps)
+            
+            # 计算辅助损失
+            aux_losses = self.auxiliary_loss(pre_features, semantic_activation_maps)
                 
             maps_for_pooling = F.interpolate(semantic_activation_maps, size=clip_feature.shape[-2:],
                                                 mode='bilinear', align_corners=False)
@@ -372,6 +402,9 @@ class MASK_Adapter(nn.Module):
             mask_cls_results = get_classification_logits(pooled_clip_feature, text_classifier, self.backbone.clip_model.logit_scale, num_templates)
 
             losses = self.cross_entropy_loss(mask_cls_results, labels)
+            
+            # 合并主损失和辅助损失
+            losses.update(aux_losses)
             
             for k in list(losses.keys()):
                 if k in self.weight_dict:
@@ -394,6 +427,18 @@ class MASK_Adapter(nn.Module):
             classes =  torch.stack(classes)
                         
             outputs = self.mask_adapter(clip_vis_dense, masks)
+            
+            # 应用卷积增强，动态创建或获取对应通道数的卷积层
+            in_channels = outputs.size(1)
+            if str(in_channels) not in self.conv_enhance:
+                self.conv_enhance[str(in_channels)] = nn.Sequential(
+                    nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1),
+                    nn.BatchNorm2d(in_channels),
+                    nn.ReLU(inplace=True),
+                    nn.Conv2d(in_channels, in_channels, kernel_size=1)
+                ).to(outputs.device)
+            
+            outputs = self.conv_enhance[str(in_channels)](outputs)
             
             maps_for_pooling = F.interpolate(outputs, size=clip_vis_dense.shape[-2:],
                                                 mode='bilinear', align_corners=False)
@@ -502,6 +547,36 @@ class MASK_Adapter(nn.Module):
             loss_ce = F.cross_entropy(mask_cls_results.transpose(1, 2), labels.to(torch.int64), ignore_index=-1)  #remove celoss weight because of multiple datasets training
 
         losses = {"loss_ce": loss_ce}
+        return losses
+    
+    def auxiliary_loss(self, pre_features, post_features):
+        """
+        计算FFN前后特征的辅助损失，用于增强模型的表示能力
+        Args:
+            pre_features: FFN前的特征图 [B, C, H, W]
+            post_features: FFN后的特征图 [B, C, H, W]
+        """
+        # 1. 特征图的L2距离损失 - 鼓励FFN学习有意义的特征变换而不是恒等映射
+        l2_loss = F.mse_loss(pre_features, post_features)
+        
+        # 2. 特征图的余弦相似度损失 - 保持语义一致性
+        pre_norm = F.normalize(pre_features.flatten(2), dim=2)
+        post_norm = F.normalize(post_features.flatten(2), dim=2)
+        cosine_sim = (pre_norm * post_norm).sum(dim=2).mean()
+        cosine_loss = 1.0 - cosine_sim
+        
+        # 3. 特征图的结构一致性损失 - 保持空间关系
+        # 计算特征图内部的相对关系
+        pre_self_sim = torch.bmm(pre_norm, pre_norm.transpose(1, 2))
+        post_self_sim = torch.bmm(post_norm, post_norm.transpose(1, 2))
+        # 保持内部结构一致
+        structure_loss = F.mse_loss(pre_self_sim, post_self_sim)
+        
+        losses = {
+            "loss_aux_l2": l2_loss,
+            "loss_aux_cosine": cosine_loss,
+            "loss_aux_structure": structure_loss
+        }
         return losses
     
     def prepare_targets(self, targets, images):

@@ -109,7 +109,7 @@ class MASKAdapterHead(nn.Module):
             
             outputs = rearrange(outputs, '(B N) C H W -> B (N C) H W',N=N)
     
-            return outputs
+            return outputs#torch.Size([6, 512, 32, 32])
 
         if self.use_checkpoint and self.training:
             outputs = cp.checkpoint(_inner_forward, outputs,use_reentrant=False)
