@@ -29,8 +29,8 @@ def generate_labels(mat_file, out_dir):
 
 if __name__ == "__main__":
     dataset_dir = Path(os.getenv("DETECTRON2_DATASETS", "datasets")) / "pascal_ctx_d2"
-    voc_dir = Path(os.getenv("DETECTRON2_DATASETS", "datasets")) / "VOCdevkit/VOC2010"
-    mat_dir = voc_dir / "trainval"
+    # 修改 mat_dir 路径，使用 pcontext/trainval 而不是 VOCdevkit/VOC2010/trainval
+    mat_dir = Path(os.getenv("DETECTRON2_DATASETS", "datasets")) / "pcontext/trainval"
     for split in ["training", "validation"]:
         file_names = list((dataset_dir / "images" / split).glob("*.jpg"))
         output_img_dir = dataset_dir / "images" / split

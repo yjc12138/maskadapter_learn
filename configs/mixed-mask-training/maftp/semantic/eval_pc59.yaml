@@ -9,4 +9,4 @@ MODEL:
 DATASETS:
   TEST: ("openvocab_pascal_ctx59_sem_seg_val",)
 
-OUTPUT_DIR: ./eval/pc59
+OUTPUT_DIR: ./training/maftp-large_warmup/eval/pc59

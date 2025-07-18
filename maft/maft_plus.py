@@ -234,7 +234,7 @@ class MAFT_Plus(nn.Module):
     def from_config(cls, cfg):
         backbone = build_backbone(cfg)
         backbone_t = None #build_backbone(cfg)
-        sem_seg_head = build_sem_seg_head(cfg, backbone.output_shape())
+        sem_seg_head = build_sem_seg_head(cfg, backbone.output_shape())#FCCLIPHead
         mask_adapter = build_mask_adapter(cfg, cfg.MODEL.MASK_ADAPTER.NAME)
 
         # loss weights
@@ -368,9 +368,9 @@ class MAFT_Plus(nn.Module):
             maps_for_pooling = F.interpolate(outputs, size=clip_feature.shape[-2:],
                                                 mode='bilinear', align_corners=False)
             if "convnext" in self.backbone.model_name.lower():
-                B,C = clip_feature.size(0),clip_feature.size(1)
-                N = maps_for_pooling.size(1)
-                num_instances = N // self.num_output_maps
+                B,C = clip_feature.size(0),clip_feature.size(1)#torch.Size([6, 1536, 32, 32])
+                N = maps_for_pooling.size(1)#torch.Size([6, 512, 32, 32])
+                num_instances = N // self.num_output_maps #self.num_output_maps=16
                 maps_for_pooling = F.softmax(F.logsigmoid(maps_for_pooling).view(B, N,-1), dim=-1)
                 pooled_clip_feature = torch.bmm(maps_for_pooling, clip_feature.view(B, C, -1).permute(0, 2, 1))
                 pooled_clip_feature = self.backbone.visual_prediction_forward(pooled_clip_feature)
@@ -671,7 +671,7 @@ class MAFT_Plus(nn.Module):
 
     def semantic_inference(self, mask_cls, mask_pred):
         mask_cls = F.softmax(mask_cls, dim=-1)[..., :-1]
-        mask_pred = mask_pred.sigmoid()
+        mask_pred = mask_pred.sigmoid()#todo
         semseg = torch.einsum("qc,qhw->chw", mask_cls, mask_pred)
         return semseg
 
@@ -683,7 +683,7 @@ class MAFT_Plus(nn.Module):
         keep = labels.ne(num_classes) & (scores > self.object_mask_threshold)
         cur_scores = scores[keep]
         cur_classes = labels[keep]
-        cur_masks = mask_pred[keep]
+        cur_masks = mask_pred[keep]#todo
         cur_mask_cls = mask_cls[keep]
         cur_mask_cls = cur_mask_cls[:, :-1]
 

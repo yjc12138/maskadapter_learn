@@ -28,7 +28,7 @@ MODEL:
       OBJECT_MASK_THRESHOLD: 0.0
 
 SOLVER:
-  IMS_PER_BATCH: 24
+  IMS_PER_BATCH: 1
   BASE_LR: 0.0001
   STEPS: (43371, 47314)
   MAX_ITER: 49286
@@ -48,5 +48,5 @@ SOLVER:
 
 TEST:
   EVAL_PERIOD: 10000  # 每 次迭代评估一次
-OUTPUT_DIR: ./training/maftp-l_test/ade20k_eval/
+OUTPUT_DIR: ./training/test/maftp-large_warmup/ade20k_eval/
 # OUTPUT_DIR: ./training/maftp-l/ade20k_eval/

@@ -6,6 +6,7 @@ checkpoint/
 training/
 output/
 evaluation/
+text_embedding/
 
 # C extensions
 *.so
